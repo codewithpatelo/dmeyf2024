@@ -7,9 +7,9 @@ require("parallel")
 
 PARAM <- list()
 # reemplazar por las propias semillas
-PARAM$semillas <- c(102191, 200177, 410551, 552581, 892237)
+PARAM$semillas <- c(945787, 945799, 945809, 945811, 945817)
 
-PARAM$dataset_nom <- "./datasets/competencia_01.csv"
+PARAM$dataset_nom <- "/kaggle/input/competencia-01b/resultado_con_clase.csv"
 
 PARAM$training_pct <- 70L  # entre  1L y 99L 
 
@@ -94,7 +94,7 @@ ArbolEstimarGanancia <- function(semilla, param_basicos) {
 #------------------------------------------------------------------------------
 
 # Aqui se debe poner la carpeta de la computadora local
-setwd("~/buckets/b1/") # Establezco el Working Directory
+#setwd("~/buckets/b1/") # Establezco el Working Directory
 
 # cargo los datos
 dataset <- fread(PARAM$dataset_nom)

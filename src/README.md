@@ -2,7 +2,7 @@
 
 ## Instrucciones
 
-(Semilla: 945799)
+(Semilla: 945799) -- Dataset con clase ternaria creado a partir de clase_ternaria.py
 1. Correr código z723_preprocesamiento (VM 32 GB RAM 8 vCPU)
 2. Correr código BO con 221 iteraciones(VM 128 GB RAM 16 vCPU)
 3. Correr código z745_lightgbm_final.r (VM 32 GB RAM 8 vCPU)

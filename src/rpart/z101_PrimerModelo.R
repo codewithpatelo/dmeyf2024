@@ -1,6 +1,10 @@
 # Arbol elemental con libreria  rpart
 # Debe tener instaladas las librerias  data.table ,  rpart  y  rpart.plot
 
+install.packages("data.table")
+install.packages("rpart")
+install.packages("rpart.plot")
+
 # cargo las librerias que necesito
 require("data.table")
 require("rpart")
@@ -63,3 +67,7 @@ fwrite(dapply[, list(numero_de_cliente, Predicted)],
         file = "./exp/KA2001/K101_001.csv",
         sep = ","
 )
+  Cell In[1], line 54
+    dapply[, prob_baja2 := prediccion[, "BAJA+2"]]
+           ^
+SyntaxError: invalid syntax
