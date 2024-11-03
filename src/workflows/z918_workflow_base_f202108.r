@@ -94,17 +94,17 @@ CA_catastrophe_base <- function( pinputexps, metodo )
 # Feature Engineering Intra Mes   Baseline
 # deterministico, SIN random
 
-FEintra_manual_base <- function( pinputexps )
-{
-  if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
+#FEintra_manual_base <- function( pinputexps )
+#{
+#  if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/z1301_FE_intrames_manual.r"
+ # param_local$meta$script <- "/src/wf-etapas/z1301_FE_intrames_manual.r"
 
-  param_local$semilla <- NULL  # no usa semilla, es deterministico
+#  param_local$semilla <- NULL  # no usa semilla, es deterministico
 
-  return( exp_correr_script( param_local ) ) # linea fija
-}
+#  return( exp_correr_script( param_local ) ) # linea fija
+#}
 #------------------------------------------------------------------------------
 # Data Drifting Baseline
 # deterministico, SIN random
@@ -167,94 +167,94 @@ FEhist_base <- function( pinputexps)
 #  atencion, parmetros para generar variables, NO para buen modelo
 #  azaroso, utiliza semilla
 
-FErf_attributes_base <- function( pinputexps,
-  arbolitos,
-  hojas_por_arbol,
-  datos_por_hoja,
-  mtry_ratio
-)
-{
-  if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
+#FErf_attributes_base <- function( pinputexps,
+ # arbolitos,
+ # hojas_por_arbol,
+ # datos_por_hoja,
+ # mtry_ratio
+#)
+#{
+#  if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/z1311_FE_rfatributes.r"
+ # param_local$meta$script <- "/src/wf-etapas/z1311_FE_rfatributes.r"
 
   # Parametros de un LightGBM que se genera para estimar la column importance
-  param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
-  param_local$train$training <- c( 202101, 202102, 202103)
+  #param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
+  #param_local$train$training <- c( 202101, 202102, 202103)
 
   # parametros para que LightGBM se comporte como Random Forest
-  param_local$lgb_param <- list(
+  #param_local$lgb_param <- list(
     # parametros que se pueden cambiar
-    num_iterations = arbolitos,
-    num_leaves  = hojas_por_arbol,
-    min_data_in_leaf = datos_por_hoja,
-    feature_fraction_bynode  = mtry_ratio,
+   # num_iterations = arbolitos,
+   # num_leaves  = hojas_por_arbol,
+   # min_data_in_leaf = datos_por_hoja,
+   # feature_fraction_bynode  = mtry_ratio,
 
     # para que LightGBM emule Random Forest
-    boosting = "rf",
-    bagging_fraction = ( 1.0 - 1.0/exp(1.0) ),
-    bagging_freq = 1.0,
-    feature_fraction = 1.0,
+    #boosting = "rf",
+    #bagging_fraction = ( 1.0 - 1.0/exp(1.0) ),
+    #bagging_freq = 1.0,
+   # feature_fraction = 1.0,
 
     # genericos de LightGBM
-    max_bin = 31L,
-    objective = "binary",
-    first_metric_only = TRUE,
-    boost_from_average = TRUE,
-    feature_pre_filter = FALSE,
-    force_row_wise = TRUE,
-    verbosity = -100,
-    max_depth = -1L,
-    min_gain_to_split = 0.0,
-    min_sum_hessian_in_leaf = 0.001,
-    lambda_l1 = 0.0,
-    lambda_l2 = 0.0,
+    #max_bin = 31L,
+    #objective = "binary",
+    #first_metric_only = TRUE,
+    #boost_from_average = TRUE,
+    #feature_pre_filter = FALSE,
+    #force_row_wise = TRUE,
+    #verbosity = -100,
+    #max_depth = -1L,
+    #min_gain_to_split = 0.0,
+    #min_sum_hessian_in_leaf = 0.001,
+    #lambda_l1 = 0.0,
+    #lambda_l2 = 0.0,
 
-    pos_bagging_fraction = 1.0,
-    neg_bagging_fraction = 1.0,
-    is_unbalance = FALSE,
-    scale_pos_weight = 1.0,
+    #pos_bagging_fraction = 1.0,
+    #neg_bagging_fraction = 1.0,
+    #is_unbalance = FALSE,
+    #scale_pos_weight = 1.0,
 
-    drop_rate = 0.1,
-    max_drop = 50,
-    skip_drop = 0.5,
+    #drop_rate = 0.1,
+    #max_drop = 50,
+    #skip_drop = 0.5,
 
-    extra_trees = FALSE
-  )
+    #extra_trees = FALSE
+  #)
 
 
-  return( exp_correr_script( param_local ) ) # linea fija
-}
+  #return( exp_correr_script( param_local ) ) # linea fija
+#}
 #------------------------------------------------------------------------------
 # Canaritos Asesinos   Baseline
 #  azaroso, utiliza semilla
 
-CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
-{
-  if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
+#CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
+#{
+#  if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/z1601_CN_canaritos_asesinos.r"
+ # param_local$meta$script <- "/src/wf-etapas/z1601_CN_canaritos_asesinos.r"
 
   # Parametros de un LightGBM que se genera para estimar la column importance
-  param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
-  param_local$train$positivos <- c( "BAJA+2")
-  param_local$train$training <- c( 202101, 202102, 202103)
-  param_local$train$validation <- c( 202105 )
-  param_local$train$undersampling <- 0.1
-  param_local$train$gan1 <- 273000
-  param_local$train$gan0 <-  -7000
+ # param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
+ # param_local$train$positivos <- c( "BAJA+2")
+ #param_local$train$training <- c( 202101, 202102, 202103)
+ # param_local$train$validation <- c( 202105 )
+ # param_local$train$undersampling <- 0.1
+ # param_local$train$gan1 <- 273000
+ # param_local$train$gan0 <-  -7000
 
 
   # ratio varia de 0.0 a 2.0
   # desvio varia de -4.0 a 4.0
-  param_local$CanaritosAsesinos$ratio <- ratio
+ # param_local$CanaritosAsesinos$ratio <- ratio
   # desvios estandar de la media, para el cutoff
-  param_local$CanaritosAsesinos$desvios <- desvio
+ # param_local$CanaritosAsesinos$desvios <- desvio
 
-  return( exp_correr_script( param_local ) ) # linea fija
-}
+ # return( exp_correr_script( param_local ) ) # linea fija
+#}
 #------------------------------------------------------------------------------
 # Training Strategy  Baseline
 #   y solo incluyo en el dataset al 20% de los CONTINUA
