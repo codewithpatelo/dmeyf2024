@@ -25,10 +25,9 @@ setwd("~/buckets/b1/expw/CN-0006")
 impo_1 <- fread("impo_1.txt")
 
 # Parámetros del algoritmo genético
-num_generaciones <- 150
 num_poblacion_extincion <- 20
 num_poblacion_creacion <- 40
-prob_cruza <- 1
+prob_cruza <- 1 # Dado que por el momento solo usamos cruza y no mutaciones...
 
 # Aplico críterio de Elitismo y selecciono las 20 variables más importantes
 atributos_importantes <- impo_1[1:num_poblacion_extincion, Feature] 
