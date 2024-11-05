@@ -430,7 +430,7 @@ wf_agosto_creacionismo_fuerzabruta <- function( pnombrewf )
   # Etapas preprocesamiento
   CA_catastrophe_base( metodo="MachineLearning")
   FEintra_manual_base()
-  DR_drifting_base(metodo="rank_cero_fijo")
+  DR_drifting_base(metodo="deflacion")
   FEhist_base()
 
   #FErf_attributes_base( arbolitos= 20,
