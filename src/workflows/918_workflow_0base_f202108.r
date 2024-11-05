@@ -18,7 +18,7 @@ envg$EXPENV$repo_dir <- "~/dmeyf2024/"
 envg$EXPENV$datasets_dir <- "~/buckets/b1/datasets/"
 envg$EXPENV$messenger <- "~/install/zulip_enviar.sh"
 
-envg$EXPENV$semilla_primigenia <- 102191
+envg$EXPENV$semilla_primigenia <- 111667
 
 # leo el unico parametro del script
 args <- commandArgs(trailingOnly=TRUE)
@@ -420,7 +420,7 @@ KA_evaluate_kaggle <- function( pinputexps )
 # Este es el  Workflow Baseline
 # Que predice 202108 donde NO conozco la clase
 
-wf_agosto <- function( pnombrewf )
+wf_agosto_base <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea workflow inicial fija
 
@@ -429,15 +429,15 @@ wf_agosto <- function( pnombrewf )
 
   # Etapas preprocesamiento
   CA_catastrophe_base( metodo="MachineLearning")
-  FEintra_manual_base()
+  #FEintra_manual_base()
   DR_drifting_base(metodo="rank_cero_fijo")
   FEhist_base()
 
-  FErf_attributes_base( arbolitos= 20,
-    hojas_por_arbol= 16,
-    datos_por_hoja= 1000,
-    mtry_ratio= 0.2
-  )
+  #FErf_attributes_base( arbolitos= 20,
+  #  hojas_por_arbol= 16,
+  #  datos_por_hoja= 1000,
+  #  mtry_ratio= 0.2
+  #)
 
   #CN_canaritos_asesinos_base(ratio=0.2, desvio=4.0)
 
@@ -457,5 +457,5 @@ wf_agosto <- function( pnombrewf )
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202108
-wf_agosto()
+wf_agosto_base()
 
