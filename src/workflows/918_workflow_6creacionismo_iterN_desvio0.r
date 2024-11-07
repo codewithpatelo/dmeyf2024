@@ -234,7 +234,7 @@ FE_creacionismo_base <- function( pinputexps, ratio, desvio)
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/1001_FE_variables_evolutivas.r"
+  param_local$meta$script <- "/src/wf-etapas/1351_FE_variables_evolutivas_v2.r"
 
   # iteracion
   param_local$Creacionismo$k <- k
