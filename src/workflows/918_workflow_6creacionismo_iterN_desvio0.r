@@ -229,7 +229,7 @@ FErf_attributes_base <- function( pinputexps,
 #------------------------------------------------------------------------------
 # Experimento Colaborativo Creacionismo
 
-FE_creacionismo_base <- function( pinputexps, ratio, desvio)
+FE_creacionismo_base <- function( pinputexps, k, cn)
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
