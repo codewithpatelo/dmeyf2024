@@ -1,0 +1,33 @@
+def extract_date_features(data):
+    data['Year'] = data.index.year
+    data['Month'] = data.index.month
+    data['Day'] = data.index.day
+    data['Weekday'] = data.index.weekday
+    data['Day_of_year'] = data.index.dayofyear
+    data['Week_of_year'] = data.index.isocalendar().week
+    data['Quarter'] = data.index.quarter
+    data['Is_month_start'] = data.index.is_month_start
+    data['Is_month_end'] = data.index.is_month_end
+    data['Is_quarter_start'] = data.index.is_quarter_start
+    data['Is_quarter_end'] = data.index.is_quarter_end
+    data['Is_year_start'] = data.index.is_year_start
+    data['Is_year_end'] = data.index.is_year_end
+    data['Days_in_month'] = data.index.days_in_month
+    data['Is_leap_year'] = data.index.is_leap_year
+    data['Elapsed_days'] = (data.index - data.index.min()).days
+    data['Weekday_name'] = data.index.day_name()
+    data['Month_name'] = data.index.month_name()
+    data['Is_weekend'] = data['Weekday'].apply(lambda x: x >= 5)
+    data['Is_weekday'] = ~data['Is_weekend']
+    data['Days_till_month_end'] = data['Days_in_month'] - data['Day']
+    data['Days_since_month_start'] = data['Day'] - 1
+    data['Week_of_month'] = (data['Day'] - 1) // 7 + 1
+    data['Weekday_of_month'] = (data['Day'] - 1) % 7 + 1
+    data['Days_to_next_holiday'] = data.index.to_series().apply(lambda x: (x + pd.DateOffset(days=1)).to_period('D').start_time)
+    data['Days_since_last_holiday'] = data.index.to_series().apply(lambda x: (x - pd.DateOffset(days=1)).to_period('D').end_time)
+    data['Business_days_in_month'] = data.index.to_series().apply(lambda x: np.busday_count(x.replace(day=1), x.replace(day=x.days_in_month) + pd.DateOffset(days=1)))
+    data['Business_day_of_month'] = data.index.to_series().apply(lambda x: np.busday_count(x.replace(day=1), x))
+    data['Days_since_first_day_of_year'] = data['Day_of_year'] - 1
+    data['Days_remaining_in_year'] = (data.index + pd.offsets.YearEnd(0)).dayofyear - data['Day_of_year']
+    
+    return data

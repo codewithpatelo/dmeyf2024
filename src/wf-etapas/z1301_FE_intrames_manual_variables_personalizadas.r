@@ -245,12 +245,12 @@ if (atributos_presentes(c("vm_mpagado"))) {
 
 # Agregar fourier a vm_mconsumospesos
 if (atributos_presentes(c("vm_mconsumospesos"))) {
-  dataset[, vm_mconsumospesos_fourier := calcular_fourier(vm_mconsumospesos, 3)]
+  dataset[, vm_mconsumospesos_fourier := calcular_fourier(vm_mconsumospesos)]
 }
 
 # Agregar fourier a vm_mconsumosdolares
 if (atributos_presentes(c("vm_mconsumosdolares"))) {
-  dataset[, vm_mconsumosdolares_fourier := calcular_fourier(vm_mconsumosdolares, 3)]
+  dataset[, vm_mconsumosdolares_fourier := calcular_fourier(vm_mconsumosdolares)]
 }
 
 # Agregar fourier a vm_msaldototal
