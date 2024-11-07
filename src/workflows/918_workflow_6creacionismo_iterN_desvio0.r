@@ -226,7 +226,6 @@ FErf_attributes_base <- function( pinputexps,
 
   return( exp_correr_script( param_local ) ) # linea fija
 }
-
 #------------------------------------------------------------------------------
 # Experimento Colaborativo Creacionismo
 
@@ -244,6 +243,8 @@ FE_creacionismo_base <- function( pinputexps, ratio, desvio)
   return( exp_correr_script( param_local ) ) # linea fija
 
 }
+
+
 
 #------------------------------------------------------------------------------
 # Canaritos Asesinos   Baseline
@@ -439,10 +440,18 @@ KA_evaluate_kaggle <- function( pinputexps )
 # Este es el  Workflow Baseline
 # Que predice 202108 donde NO conozco la clase
 
-wf_agosto_creacionismo_fuerzabruta <- function( pnombrewf )
+wf_agosto_creacionismo_itern_desvio0 <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea workflow inicial fija
 
+
+  # Definimos un k ykmax
+  k <- 2
+  maxk <- 4
+  cn <- 1 
+
+
+  if (k == 0) {  
   # Etapa especificacion dataset de la Segunda Competencia Kaggle
   DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
 
@@ -457,23 +466,34 @@ wf_agosto_creacionismo_fuerzabruta <- function( pnombrewf )
   #  datos_por_hoja= 1000,
   #  mtry_ratio= 0.2
   #)
-  
-  # BASE
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=0)
-  FE_creacionismo_base(k=1, cn="0001")
-  # ITERACION 
-  DT_incorporar_dataset( "~/buckets/b1/datasets/dataset_iter_1.csv.gz")
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=0)
 
+  }
+  # Bucle for que va desde k hasta maxk
+  for (k in k:maxk) {
+    if (k != 0) {  
+      FE_creacionismo_base(k=k, cn=sprintf("%04d", cn))
+      # Crear el nombre del archivo dinámicamente usando k
+      archivo <- paste0("~/buckets/b1/datasets/dataset_iter_", k, ".csv.gz")
+      DT_incorporar_dataset(archivo)
+    }
 
-  # Etapas modelado
-  #ts8 <- TS_strategy_base8()
-  #ht <- HT_tuning_base( bo_iteraciones = 40 )  # iteraciones inteligentes
+    CN_canaritos_asesinos_base(ratio=0.2, desvio=0)
+    cn <- cn + 1
 
-  # Etapas finales
-  #fm <- FM_final_models_lightgbm( c(ht, ts8), ranks=c(1), qsemillas=5 )
-  #SC_scoring( c(fm, ts8) )
-  #KA_evaluate_kaggle()  # genera archivos para Kaggle
+    # Verificar si k es un número par
+    if (k %% 2 == 0) {
+      # Etapas modelado
+      ts8 <- TS_strategy_base8()
+      ht <- HT_tuning_base( bo_iteraciones = 40 )  # iteraciones inteligentes
+
+      # Etapas finales
+      fm <- FM_final_models_lightgbm( c(ht, ts8), ranks=c(1), qsemillas=5 )
+      SC_scoring( c(fm, ts8) )
+      KA_evaluate_kaggle()  # genera archivos para Kaggle
+    }
+
+    k <- k + 1
+  }
 
   return( exp_wf_end() ) # linea workflow final fija
 }
@@ -482,5 +502,5 @@ wf_agosto_creacionismo_fuerzabruta <- function( pnombrewf )
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202108
-wf_agosto_creacionismo_fuerzabruta()
+wf_agosto_creacionismo_itern_desvio0()
 
