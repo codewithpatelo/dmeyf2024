@@ -2,7 +2,7 @@ require( "data.table" )
 
 #Especificar carpeta donde guarda el dataset los canarios asesinos.
 #Si va a ser la primer iteracion, especificar carpeta del dataset original
-setwd("~/buckets/b1/expw/CN-0015") # Establezco el Working Directory
+setwd("~/buckets/b1/expw/CN-0002") # Establezco el Working Directory
 
 #Nombre del dataset
 dataset <- fread("dataset.csv.gz")
