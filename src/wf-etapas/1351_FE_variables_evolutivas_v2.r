@@ -10,16 +10,28 @@ source( paste0( args[1] , "/src/lib/action_lib.r" ) )
 
 require( "data.table" )
 
-cn = envg$PARAM$Creacionismo$cn
+cn = envg$PARAM$evo_cn
 
 if (is.null(cn)) {
   cn <- "0001"
 }
 
+k=envg$PARAM$evo_k
+if (is.null(k)) {
+  k <- 1
+}
+
+
+cat(
+      "Generación ", k, " ", "CN-", cn, "ENVG: ", envg
+)
+
 
 #Especificar carpeta donde guarda el dataset los canarios asesinos.
 #Si va a ser la primer iteracion, especificar carpeta del dataset original
 setwd(paste0("~/buckets/b1/expw/CN-", cn)) # Establezco el Working Directory
+
+
 
 #Nombre del dataset
 dataset <- fread("dataset.csv.gz")
@@ -35,10 +47,6 @@ variables_importantes <- impo_1[1:20, Feature] #Selecciono las 20 variables mas 
 
 
 #ACA HAY QUE EMPEZAR UN MEGA BUCLE
-k=envg$PARAM$Creacionismo$k
-if (is.null(k)) {
-  k <- 1
-}
 #AQUI COMIENZO A CREAR NUEVAS VARIABLES-----------------------------------------
 
 # Inicializa nuevas_variables como un data.table vacío

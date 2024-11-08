@@ -237,9 +237,9 @@ FE_creacionismo_base <- function( pinputexps, k, cn)
   param_local$meta$script <- "/src/wf-etapas/1351_FE_variables_evolutivas_v2.r"
 
   # iteracion
-  param_local$Creacionismo$k <- k
+  param_local$evo_k <- k
   # numero de experimento de canarito
-  param_local$Creacionismo$cn <- cn
+  param_local$evo_cn <- cn
   return( exp_correr_script( param_local ) ) # linea fija
 
 }
