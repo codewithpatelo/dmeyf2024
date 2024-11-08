@@ -1,7 +1,7 @@
 require("rlang", quietly=TRUE) 
 
 # workflow que voy a correr
-PARAM <- "src/workflows/918_workflow_6creacionismo_itern_desvio0.r"
+PARAM <- "src/workflows/918_workflow_6creacionismo_iterN_desvio0.r"
 
 envg <- env()
 
