@@ -31,3 +31,120 @@ def extract_date_features(data):
     data['Days_remaining_in_year'] = (data.index + pd.offsets.YearEnd(0)).dayofyear - data['Day_of_year']
     
     return data
+
+    # Limpieza de la memoria
+rm(list = ls(all.names = TRUE))
+gc(full = TRUE, verbose = FALSE)
+
+args <- commandArgs(trailingOnly = TRUE)
+source(paste0(args[1], "/src/lib/action_lib.r"))
+
+require("data.table")
+
+# Parámetros iniciales
+cn <- envg$PARAM$Creacionismo$cn
+if (is.null(cn)) cn <- "0001"
+
+k <- envg$PARAM$Creacionismo$k
+if (is.null(k)) k <- 1
+
+setwd(paste0("~/buckets/b1/expw/CN-", cn))
+
+# Cargar dataset y archivo de importancia
+dataset <- fread("dataset.csv.gz")
+impo_1 <- fread("impo_1.txt")
+
+# Parámetros del algoritmo genético
+num_poblacion_extincion <- 20
+num_poblacion_creacion <- 40
+learning_rate <- 0.1
+
+# Selección de atributos más importantes
+atributos_importantes <- impo_1[1:num_poblacion_extincion, Feature]
+
+# Inicialización de probabilidades para operadores de cruza y selección de padres
+prob_operadores <- c("+" = 0.25, "-" = 0.25, "*" = 0.25, "/" = 0.25)
+prob_atributos <- rep(1 / length(atributos_importantes), length(atributos_importantes))
+names(prob_atributos) <- atributos_importantes
+
+# Función de fitness
+calcular_fitness <- function(dataset, nuevas_columnas) {
+  objetivo <- "target" # Cambia "target" por tu variable objetivo
+  fitness <- sum(abs(sapply(nuevas_columnas, function(col) cor(dataset[[col]], dataset[[objetivo]], use = "complete.obs"))))
+  return(fitness)
+}
+
+# Ajuste de probabilidades usando aprendizaje por refuerzo
+ajustar_probabilidades <- function(fitness_actual, fitness_anterior, probabilidades, tasa_aprendizaje) {
+  reward <- fitness_actual - fitness_anterior
+  for (i in names(probabilidades)) {
+    probabilidades[i] <- probabilidades[i] + tasa_aprendizaje * reward
+  }
+  probabilidades <- probabilidades / sum(probabilidades) # Normalización
+  return(probabilidades)
+}
+
+# Operación de cruza
+operador_cruza <- function(padre, madre, operador) {
+  if (operador == "+") {
+    nuevo_atributo <- padre + madre
+  } else if (operador == "-") {
+    nuevo_atributo <- padre - madre
+  } else if (operador == "*") {
+    nuevo_atributo <- padre * madre
+  } else if (operador == "/") {
+    nuevo_atributo <- padre / madre
+  }
+  return(nuevo_atributo)
+}
+
+# Creación de una nueva generación con RL para operadores y selección de padres
+creacion_nueva_generacion <- function(poblacion, num_nuevas, prob_operadores, prob_atributos) {
+  nuevas_columnas <- c()
+  for (l in 1:num_nuevas) {
+    # Selecciona los padres basándose en probabilidad ajustada
+    padres_indices <- sample(1:length(poblacion), 2, prob = prob_atributos, replace = FALSE)
+    padre <- dataset[[poblacion[padres_indices[1]]]]
+    madre <- dataset[[poblacion[padres_indices[2]]]]
+    
+    # Selecciona el operador basándose en probabilidad ajustada
+    operador <- sample(names(prob_operadores), 1, prob = prob_operadores)
+    nuevo_atributo <- operador_cruza(padre, madre, operador)
+
+    # Nombre del nuevo atributo
+    cromosoma <- paste0(k, "_", names(padre)[1], "_", operador, "_", names(madre)[1])
+    dataset[, (cromosoma) := nuevo_atributo]
+
+    # Guardar el nombre de la nueva columna
+    nuevas_columnas <- c(nuevas_columnas, cromosoma)
+  }
+  return(nuevas_columnas)
+}
+
+# Inicialización de generación y ajuste de probabilidades
+fitness_anterior <- -Inf
+
+for (gen in 1:10) { # Número de generaciones
+  # Crear nueva generación
+  nuevas_columnas <- creacion_nueva_generacion(atributos_importantes, num_poblacion_creacion, prob_operadores, prob_atributos)
+
+  # Calcular fitness
+  fitness_actual <- calcular_fitness(dataset, nuevas_columnas)
+  cat("Generación:", gen, "Fitness:", fitness_actual, "\n")
+  
+  # Ajustar probabilidades de operadores y selección de atributos
+  prob_operadores <- ajustar_probabilidades(fitness_actual, fitness_anterior, prob_operadores, learning_rate)
+  prob_atributos <- ajustar_probabilidades(fitness_actual, fitness_anterior, prob_atributos, learning_rate)
+  
+  # Actualizar el fitness anterior
+  fitness_anterior <- fitness_actual
+
+  # Guardar las nuevas columnas en la generación actual
+  poblacion_atributos <<- rbind(poblacion_atributos, data.table(nombre = nuevas_columnas))
+}
+
+# Guardar nuevas variables generadas
+setwd("~/buckets/b1/datasets")
+nombre_archivo <- paste0("nuevas_variables_iter_", k, ".csv")
+fwrite(poblacion_atributos, file = nombre_archivo, logical01 = TRUE, sep = ",")
+cat("Finalizado grabado de nuevas variables\n")
