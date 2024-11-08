@@ -449,23 +449,26 @@ wf_agosto_creacionismo_itern_desvio0 <- function( pnombrewf )
   k <- 2
   maxk <- 4
   cn <- 1 
+  intervalo_bo <- 2
 
 
   if (k == 0) {  
-  # Etapa especificacion dataset de la Segunda Competencia Kaggle
-  DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
+    # Etapa especificacion dataset de la Segunda Competencia Kaggle
+    DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
 
-  # Etapas preprocesamiento
-  #CA_catastrophe_base( metodo="MachineLearning")
-  #FEintra_manual_base()
-  #DR_drifting_base(metodo="deflacion")
-  #FEhist_base()
+    # Etapas preprocesamiento
+    CA_catastrophe_base( metodo="MachineLearning")
+    #FEintra_manual_base()
+    DR_drifting_base(metodo="deflacion")
+    FEhist_base()
 
-  #FErf_attributes_base( arbolitos= 20,
-  #  hojas_por_arbol= 16,
-  #  datos_por_hoja= 1000,
-  #  mtry_ratio= 0.2
-  #)
+    FErf_attributes_base( arbolitos= 20,
+      hojas_por_arbol= 16,
+      datos_por_hoja= 1000,
+      mtry_ratio= 0.2
+    )
+
+    CN_canaritos_asesinos_base(ratio=0.2, desvio=0)
 
   }
   # Bucle for que va desde k hasta maxk
@@ -481,7 +484,7 @@ wf_agosto_creacionismo_itern_desvio0 <- function( pnombrewf )
     cn <- cn + 1
 
     # Verificar si k es un número par
-    if (k %% 2 == 0) {
+    if (k %% intervalo_bo == 0 || k == 0 || k == kmax) {
       # Etapas modelado
       ts8 <- TS_strategy_base8()
       ht <- HT_tuning_base( bo_iteraciones = 40 )  # iteraciones inteligentes
