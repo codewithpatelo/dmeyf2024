@@ -9,6 +9,8 @@ args <- commandArgs(trailingOnly=TRUE)
 source( paste0( args[1] , "/src/lib/action_lib.r" ) )
 
 require( "data.table" )
+require("yaml", quietly=TRUE)
+
 
 action_inicializar() 
 
