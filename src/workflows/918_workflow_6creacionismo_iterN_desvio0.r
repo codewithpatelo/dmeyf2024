@@ -468,8 +468,6 @@ wf_agosto_creacionismo_itern_desvio0 <- function( pnombrewf )
       mtry_ratio= 0.2
     )
 
-    CN_canaritos_asesinos_base(ratio=0.2, desvio=0)
-
   }
   # Bucle for que va desde k hasta maxk
   for (k in k:maxk) {
