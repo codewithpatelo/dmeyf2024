@@ -14,7 +14,7 @@ require("yaml", quietly=TRUE)
 
 action_inicializar() 
 
-cn <- envg$PARAM$Creacionismo$cn
+cn <- trimws(envg$PARAM$Creacionismo$cn)
 
 if (is.null(cn)) {
   cn <- "0001"
