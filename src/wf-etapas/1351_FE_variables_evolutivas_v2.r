@@ -10,6 +10,8 @@ source( paste0( args[1] , "/src/lib/action_lib.r" ) )
 
 require( "data.table" )
 
+action_inicializar() 
+
 cn <- envg$PARAM$Creacionismo$cn
 
 if (is.null(cn)) {

@@ -148,3 +148,61 @@ setwd("~/buckets/b1/datasets")
 nombre_archivo <- paste0("nuevas_variables_iter_", k, ".csv")
 fwrite(poblacion_atributos, file = nombre_archivo, logical01 = TRUE, sep = ",")
 cat("Finalizado grabado de nuevas variables\n")
+
+# Paquetes necesarios
+library(data.table)
+library(caret)
+library(keras)
+
+# Población inicial (features originales)
+poblacion_inicial <- c("x1", "x2", "x3")
+
+# Inicializa el agente DRL
+model_drl <- keras_model_sequential() %>%
+  layer_dense(units = 64, activation = "relu", input_shape = length(poblacion_inicial)) %>%
+  layer_dense(units = 32, activation = "relu") %>%
+  layer_dense(units = length(operadores), activation = "softmax")
+
+# Función de Evaluación (Ejemplo: Correlación con Target)
+evaluar_poblacion <- function(dataset, nuevas_caracteristicas) {
+  # Calcula el fitness de cada característica nueva
+  score <- sum(sapply(nuevas_caracteristicas, function(var) cor(dataset[[var]], dataset$target)))
+  return(score)
+}
+
+# Función de Selección Basada en DRL
+seleccionar_caracteristicas <- function(model_drl, poblacion) {
+  # DRL ajusta probabilidades de seleccionar características/operadores
+  probabilidades <- model_drl %>% predict(poblacion)
+  seleccion <- sample(poblacion, size = 2, prob = probabilidades, replace = FALSE)
+  return(seleccion)
+}
+
+# Iterar sobre generaciones
+for (generacion in 1:num_generaciones) {
+  nuevas_caracteristicas <- list()
+  
+  # Selección y transformación
+  for (i in 1:num_poblacion_creacion) {
+    # Selecciona padres y operador basado en DRL
+    padres <- seleccionar_caracteristicas(model_drl, poblacion_inicial)
+    operador <- sample(c("+", "-", "*", "/"), size = 1, prob = probabilidades_operadores)
+    
+    # Crear nueva característica
+    nueva_caracteristica <- paste0(padres[1], operador, padres[2])
+    dataset[[nueva_caracteristica]] <- eval(parse(text = nueva_caracteristica))
+    
+    # Guarda la nueva característica para evaluación
+    nuevas_caracteristicas <- c(nuevas_caracteristicas, nueva_caracteristica)
+  }
+  
+  # Evaluación y Ajuste de DRL
+  fitness <- evaluar_poblacion(dataset, nuevas_caracteristicas)
+  recompensa <- fitness - fitness_anterior
+  
+  # Ajuste el modelo DRL con el reward obtenido
+  model_drl %>% train_on_batch(x = dataset, y = recompensa)
+  
+  fitness_anterior <- fitness
+  cat("Generación:", generacion, "Fitness:", fitness, "\n")
+}
