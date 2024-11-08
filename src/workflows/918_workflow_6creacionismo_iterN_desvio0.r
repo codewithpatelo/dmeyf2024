@@ -233,6 +233,11 @@ FE_creacionismo_base <- function( pinputexps, k, cn)
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
+  
+  # Agrega k y cn al parámetro param_local
+  param_local$Creacionismo$k <- k
+  param_local$Creacionismo$cn <- cn
+
 
   param_local$meta$script <- "/src/wf-etapas/1351_FE_variables_evolutivas_v2.r"
 
@@ -448,7 +453,7 @@ wf_agosto_creacionismo_itern_desvio0 <- function( pnombrewf )
   # Definimos un k ykmax
   k <- 2
   maxk <- 4
-  cn <- 1 
+  cn <- 3 
   intervalo_bo <- 2
 
 
