@@ -10,13 +10,13 @@ source( paste0( args[1] , "/src/lib/action_lib.r" ) )
 
 require( "data.table" )
 
-cn = envg$PARAM$Creacionismo$cn
+cn <- envg$PARAM$Creacionismo$cn
 
 if (is.null(cn)) {
   cn <- "0001"
 }
 
-k=envg$PARAM$Creacionismo$k
+k <- envg$PARAM$Creacionismo$k
 if (is.null(k)) {
   k <- 1
 }
