@@ -25,7 +25,7 @@ if (is.null(k)) {
 
 
 cat(
-      "Generación ", k, " ", "CN-", cn, "ENVG: ", envg
+      "Generación ", k, " ", "CN-", cn
 )
 
 
