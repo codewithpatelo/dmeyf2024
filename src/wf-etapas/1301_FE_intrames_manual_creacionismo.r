@@ -209,6 +209,9 @@ AgregarVariables_IntraMes <- function(dataset) {
     dataset[, vmr_mpagominimo := vm_mpagominimo / vm_mlimitecompra]
 
   # Aqui debe usted agregar sus propias nuevas variables
+  # Crear la variable mpasivos_margen_lag1 como un lag de orden 1 de mpasivos_margen
+  dataset[, mpasivos_margen_lag1 := shift(mpasivos_margen, n = 1, type = "lag")]
+  
 
   dataset[, iter_5_var_622 := (
   ((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * 
