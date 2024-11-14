@@ -211,12 +211,12 @@ AgregarVariables_IntraMes <- function(dataset) {
   # Aqui debe usted agregar sus propias nuevas variables
 
   dataset[, iter_5_var_622 := (
-  ((mcaja_ahorro_ + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * 
+  ((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * 
   ((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo)) +
   ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo) +
    ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen)))
 ) + (
-  ((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro_ + mprestamos_personales) +
+  ((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales) +
    ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + (mcuenta_debitos_automaticos))) +
   ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo) +
    ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen)))
