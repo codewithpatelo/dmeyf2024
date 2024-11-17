@@ -18,34 +18,28 @@ require("lightgbm", quietly=TRUE)
 #------------------------------------------------------------------------------
 # Parametros del Algoritmo Genetico "Reforzado"
 #------------------------------------------------------------------------------
-envg$PARAM$Creacionismo$semilla <- envg$PARAM$semilla
+cat( "ETAPA  z1550_FE_variables_geneticas.r  START\n")
+action_inicializar() 
 
+cat( "Crea ", envg$PARAM$Creacionismo$num_crea,  "\n")
+
+envg$PARAM$Creacionismo$semilla <- envg$PARAM$semilla
 semilla <- envg$PARAM$Creacionismo$semilla
-num_poblacion_extincion <- ifelse(!is.null(envg$PARAM$Creacionismo$num_ext) && !is.na(envg$PARAM$Creacionismo$num_ext), 
-                                  envg$PARAM$Creacionismo$num_ext, 
-                                  600)
-num_poblacion_creacion <- ifelse(!is.null(envg$PARAM$Creacionismo$num_crea) && !is.na(envg$PARAM$Creacionismo$num_crea), 
-                                 envg$PARAM$Creacionismo$num_ext, 
-                                 800)
-num_generaciones <- ifelse(!is.null(envg$PARAM$Creacionismo$k) && !is.na(envg$PARAM$Creacionismo$k), 
-                           envg$PARAM$Creacionismo$k, 
-                           10)
-prob_cruza <- ifelse(!is.null(envg$PARAM$Creacionismo$prob_cruza) && !is.na(envg$PARAM$Creacionismo$prob_cruza), 
-                     envg$PARAM$Creacionismo$prob_cruza, 
-                     0.9) 
-prob_mutacion <- ifelse(!is.null(envg$PARAM$Creacionismo$prob_mutacion) && !is.na(envg$PARAM$Creacionismo$prob_mutacion), 
-                        envg$PARAM$Creacionismo$prob_mutacion, 
-                        0.1) 
+
+num_poblacion_creacion <- envg$PARAM$Creacionismo$num_crea
+
+num_generaciones <- envg$PARAM$Creacionismo$k
+
+prob_cruza <- envg$PARAM$Creacionismo$prob_cruza
+
+prob_mutacion <- envg$PARAM$Creacionismo$prob_mutacion
+
 prob_operadores_cruza <- c("+" = 0.25, "-" = 0.25, "*" = 0.25, "/" = 0.25)
 prob_operadores_mutacion <- c("lag1" = 0.25, "lag2" = 0.25, "ventana3" = 0.25, "fourier" = 0.25)
 
-tasa_aprendizaje_poblacion <- ifelse(!is.null(envg$PARAM$Creacionismo$tasa_aprendizaje) && !is.na(envg$PARAM$Creacionismo$tasa_aprendizaje), 
-                                     envg$PARAM$Creacionismo$tasa_aprendizaje_poblacion, 
-                                     0.2) 
+tasa_aprendizaje_poblacion <- envg$PARAM$Creacionismo$tasa_aprendizaje_poblacion
 
-tasa_aprendizaje_atributo <- ifelse(!is.null(envg$PARAM$Creacionismo$tasa_aprendizaje) && !is.na(envg$PARAM$Creacionismo$tasa_aprendizaje), 
-                                    envg$PARAM$Creacionismo$tasa_aprendizaje_atributo, 
-                                    0.1) 
+tasa_aprendizaje_atributo <- envg$PARAM$Creacionismo$tasa_aprendizaje_atributo 
 
 
 # Defino operadores de cruza
@@ -292,7 +286,7 @@ funcion_aptitud_atributo <- function(nueva_variable, nombre) {
   if (length(nueva_variable) != nrow(dataset)) {
     stop("La longitud de nueva_variable no coincide con el número de filas de dataset")
   }
-
+  
   # Crear una copia del dataset para evitar modificar el original
   dataset_local <- copy(dataset)
   
@@ -303,12 +297,16 @@ funcion_aptitud_atributo <- function(nueva_variable, nombre) {
   # Agregar la nueva variable al dataset (ahora con el vector)
   dataset_local[, nueva_var := nueva_variable]
   
+  dataset_local[, nueva_var := as.numeric(nueva_variable)]
+  
+  
   # Seleccionar campos relevantes
   campos_buenos <- setdiff(colnames(dataset_local), c("clase01"))
+  campos_buenos <- union(campos_buenos, "nueva_var")
   
   # Crear un dataset LightGBM con una muestra
   set.seed(semilla)
-  idx_sample <- sample(1:nrow(dataset_local), size = min(5000, nrow(dataset_local)))
+  idx_sample <- sample(1:nrow(dataset_local), size = round(0.1 * nrow(dataset_local)))
   
   dtrain <- lgb.Dataset(
     data = data.matrix(dataset_local[idx_sample, campos_buenos, with = FALSE]),
@@ -353,7 +351,7 @@ funcion_aptitud_atributo <- function(nueva_variable, nombre) {
 
 
 # Función de aptitud global (LightGBM con todas las variables)
-funcion_aptitud_poblacion <- function(nuevos_atributos) {
+funcion_aptitud_poblacion <- function() {
   # Verificar que tb_importancia esté disponible
   if (!exists("tb_importancia")) {
     stop("La tabla 'tb_importancia' no ha sido inicializada. Ejecuta primero 'CanaritosExtincionistas'.")
@@ -377,8 +375,7 @@ funcion_aptitud_poblacion <- function(nuevos_atributos) {
 # Actualización de probabilidades (individual) 
 actualizar_probabilidades_atributo <- function(atributo, aptitud, tipo_operador, operador) {
   cat("Actualizando probabilidades para atributo ", atributo, "\n")
-
-  cat("L ", length(prob_atributos), "Ld", length(dataset) "\n")
+  
   
   # Verificar si prob_atributos está correctamente inicializado
   if (is.null(prob_atributos)) {
@@ -387,25 +384,19 @@ actualizar_probabilidades_atributo <- function(atributo, aptitud, tipo_operador,
     cat("Probabilidades inicializadas: ", prob_atributos, "\n")
   }
   
-  # Verificar si el atributo existe en prob_atributos (por nombre)
-  if (!(atributo %in% names(prob_atributos))) {
-    cat("Error: El atributo ", atributo, " no se encuentra en prob_atributos. Usando índice de columna.\n")
-    
-    # Acceso por índice para actualizar la probabilidad si no existe
-    idx_atributo <- which(colnames(dataset) == atributo)
-    
-    if (length(idx_atributo) > 0) {
-      #prob_atributos[[atributo]] <<- prob_atributos[[atributo]] + aptitud * 0.1
-      #cat("Nueva probabilidad para atributo ", atributo, ": ", prob_atributos[[atributo]], "\n")
-    } else {
-      cat("Error: No se pudo encontrar el atributo ", atributo, " en las columnas del dataset.\n")
-    }
+  if (!atributo %in% names(prob_atributos)) {
+    # Si el atributo no está, agrégalo con probabilidad inicial 0
+    prob_atributos <<- c(prob_atributos, setNames(0, atributo))
+    cat("Atributo", atributo, "agregado a prob_atributos con probabilidad inicial de: 0\n")
   } else {
-    # Si el atributo existe, actualizamos su probabilidad
-   # prob_atributos[[atributo]] <<- prob_atributos[[atributo]] + aptitud * 0.1
-   # prob_atributos <<- prob_atributos / sum(prob_atributos)  # Normaliza
-   # cat("Nueva probabilidad para atributo ", atributo, ": ", prob_atributos[[atributo]], "\n")
+    # Si el atributo existe, actualiza su probabilidad
+    #prob_atributos[[atributo]] <<- prob_atributos[[atributo]] + aptitud * tasa_aprendizaje_atributo
+    #cat("Nueva probabilidad para atributo ", atributo, ": ", prob_atributos[[atributo]], "\n")
   }
+  
+  # Normalizar las probabilidades
+  #prob_atributos <<- prob_atributos / sum(prob_atributos)
+  
   
   
   if (tipo_operador == "cruza") {
@@ -452,10 +443,10 @@ actualizar_probabilidades_atributo <- function(atributo, aptitud, tipo_operador,
 
 
 actualizar_probabilidades_poblacion <- function(aptitud_actual, aptitud_anterior) {
-  cat( "Actualizando probabilidades...")
+  cat( "Actualizando probabilidades... \n")
   recompenza <- aptitud_actual - aptitud_anterior
-  prob_cruza <- prob_cruza + tasa_aprendizaje * recompenza
-  prob_mutacion <- prob_mutacion + tasa_aprendizaje * recompenza
+  prob_cruza <- prob_cruza + tasa_aprendizaje_poblacion * recompenza
+  prob_mutacion <- prob_mutacion + tasa_aprendizaje_poblacion * recompenza
   
   # Normaliza las probabilidades de cruza y mutación
   total <- prob_cruza + prob_mutacion
@@ -466,19 +457,20 @@ actualizar_probabilidades_poblacion <- function(aptitud_actual, aptitud_anterior
 # Bucle para crear nuevas variables y agregar al dataset
 Creacion_Nueva_Generacion <- function() {
   cat( "Inicio Creacion_Nueva_Generacion()\n")
-
   
-  # hasta que dataset length tenga el valor de num_poblacion_creacion
   
-  num_vars <- num_poblacion_creacion - ncol(dataset)
-  if (num_vars < 0) {
-    num_vars <- 1
+  num_vars_inicio = ncol(dataset)
+  if (num_vars_inicio > num_poblacion_creacion) {
+    vars_a_crear = 1
+  } else {
+    vars_a_crear = num_poblacion_creacion - num_vars_inicio
   }
   
-  for (l in 1:num_vars) {
+  for (l in 1:vars_a_crear) {
     exito <- FALSE
     cat( "Var -> ", l, "\n")
     cat("Generando nueva variable, total actuales:", ncol(dataset), "\n")
+    cat("Objetivo de creación: ",l, "/", vars_a_crear, "(", num_vars_inicio+vars_a_crear, "/", num_vars_inicio ")\n")
     
     # Selecciona el tipo de operador según las probabilidades prob_cruza y prob_mutacion
     cat("Selecionando tipo de operador...\n")
@@ -517,17 +509,17 @@ Creacion_Nueva_Generacion <- function() {
           }
           nuevo_atributo <- operador_cruza(padre, madre, operador)
           dataset[, paste0("iter_",k,"_var_",l) := nuevo_atributo]
-        
+          
           # Agrega al diccionario nuevos_atributos
           nuevos_atributos <<- rbind(nuevos_atributos, data.table(nombre = paste0("iter_",k,"_var_",l),
-                                                               explicacion = cromosoma))
+                                                                  explicacion = cromosoma))
           cat("Atributo: ", cromosoma, "\n")
           exito <- TRUE
         }
         
-       
         
-       
+        
+        
       } else {
         cat("Atributos no presentes. Abortando operación.\n")
         exito <- FALSE
@@ -538,11 +530,11 @@ Creacion_Nueva_Generacion <- function() {
     } else if (tipo_operador == "mutacion") {
       # Selecciona aleatoriamente un atributo de la población
       cat("Seleccionando atributo...\n")
-      indice <- sample(1:ncol(dataset), 1, prob = prob_atributos)  # Selecciona índice de columna
+      indice <- sample(1:ncol(dataset), 1, prob = prob_atributos)
       gen <- dataset[[indice]]  # Obtiene la columna seleccionada
       gen_nombre <- names(dataset)[indice]
       cat("Seleccionado: ", names(dataset)[indice], "\n")  # Imprime el nombre de la columna
-
+      
       
       if(!es_lageable(names(dataset)[indice])) {
         cat("Este atributo no es lagueable. Abortando mutación.\n")
@@ -561,7 +553,7 @@ Creacion_Nueva_Generacion <- function() {
           
           # Agrega al diccionario nuevos_atributos
           nuevos_atributos <<- rbind(nuevos_atributos, data.table(nombre = paste0("iter_",k,"_var_",l),
-                                                                 explicacion = cromosoma))
+                                                                  explicacion = cromosoma))
           cat("Atributo: ", cromosoma, "\n")
           exito <- TRUE
         } else {
@@ -574,14 +566,14 @@ Creacion_Nueva_Generacion <- function() {
     }
     
     # Realiza la evaluación de aptitud de la nueva variable
-    if (exito == TRUE) {
-        cat("Calculando aptitud nueva variable...\n")
-        aptitud <- funcion_aptitud_atributo(nuevo_atributo, cromosoma)
-        cat("Actualizando probabilidades...\n")
-        prob_atributos <- rep(1 / length(dataset), length(dataset))
-        actualizar_probabilidades_atributo(paste0("iter_",k,"_var_",l), aptitud, tipo_operador, operador)
+    if (exito == TRUE && envg$PARAM$Creacionismo$reforzado == TRUE ) {
+      cat("Calculando aptitud nueva variable...\n")
+      aptitud <- funcion_aptitud_atributo(nuevo_atributo, cromosoma)
+      cat("Actualizando probabilidades...\n")
+      prob_atributos <- rep(1 / length(dataset), length(dataset))
+      actualizar_probabilidades_atributo(paste0("iter_",k,"_var_",l), aptitud, tipo_operador, operador)
     }
-
+    
     
     
     l <- l + 1  # Incrementa el contador
@@ -591,8 +583,6 @@ Creacion_Nueva_Generacion <- function() {
 
 #------------------------------------------------------------------------------
 # Aqui comienza el programa
-cat( "ETAPA  z1550_FE_variables_geneticas.r  START\n")
-action_inicializar() 
 # cargo el dataset
 envg$PARAM$dataset <- paste0( "./", envg$PARAM$input, "/dataset.csv.gz" )
 envg$PARAM$dataset_metadata <- read_yaml( paste0( "./", envg$PARAM$input, "/dataset_metadata.yml" ) )
@@ -638,7 +628,7 @@ prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(data
 
 cat( "Variables creacionistas geneticas\n")
 # Inicialización de la generación y ajuste de probabilidades
-aptitud_anterior_poblacion <<- -Inf
+aptitud_anterior_poblacion <<- 0
 set.seed(semilla)
 
 for (k in 1:num_generaciones) { # Número de generaciones
@@ -697,25 +687,33 @@ for (k in 1:num_generaciones) { # Número de generaciones
   fin_key <- paste0("ncol_iter", k, "_fin")
   envg$OUTPUT$Creacionismo[[inicio_key]] <- ncol(dataset)
   CanaritosExtincionistas(
-    canaritos_ratio = envg$PARAM$Creacionismo$ratio_canaritos,
-    canaritos_desvios = envg$PARAM$Creacionismo$desvios_canaritos,
+    canaritos_ratio = envg$PARAM$Creacionismo$canaritos_ratio,
+    canaritos_desvios = envg$PARAM$Creacionismo$canaritos_desvios,
     canaritos_semilla = envg$PARAM$Creacionismo$semilla,
     GVEZ = k
   )
   envg$OUTPUT$Creacionismo[[fin_key]] <- ncol(dataset)
+  
+  
+  cat("Actualizando longuitud de prob_atributos...")
+  prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(dataset))
+  cat("Longuitud probs: ",length(prob_atributos), "Longuitud dataset: ", ncol(dataset))
   #--------------------------------------------------------------------------
   # Calcular el fitness de la generación actual
+  if(envg$PARAM$Creacionismo$reforzado == TRUE) {
+    aptitud_actual_poblacion <<- funcion_aptitud_poblacion()
+    cat("Generación:", k, "Aptitud:", aptitud_actual_poblacion, "Probabilidad de Cruza:", prob_cruza, "Probabilidad de Mutación:", prob_mutacion, "\n")
+    aptitud_key <- paste0("iter", k, "_aptitud")
+    envg$OUTPUT$Creacionismo[[aptitud_key]] <- aptitud_actual_poblacion
+    
+    # Ajustar probabilidades usando RL
+    actualizar_probabilidades_poblacion(aptitud_actual_poblacion, aptitud_anterior_poblacion)
+    
+    # Actualizar el fitness anterior
+    aptitud_anterior_poblacion <<- aptitud_actual_poblacion
+    
+  }
   
-  aptitud_actual_poblacion <- funcion_aptitud_poblacion()
-  cat("Generación:", k, "Aptitud:", aptitud_actual_poblacion, "Probabilidad de Cruza:", prob_cruza, "Probabilidad de Mutación:", prob_mutacion, "\n")
-  aptitud_key <- paste0("iter", k, "_aptitud")
-  envg$OUTPUT$Creacionismo[[aptitud_key]] <- aptitud_actual_poblacion
-  
-  # Ajustar probabilidades usando RL
-  probabilidades <- actualizar_probabilidades_poblacion(aptitud_actual_poblacion, aptitud_anterior_poblacion)
-  
-  # Actualizar el fitness anterior
-  aptitud_anterior_poblacion <- aptitud_actual_poblacion
   GrabarOutput()
 }
 

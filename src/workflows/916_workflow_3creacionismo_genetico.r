@@ -246,16 +246,17 @@ FE_creacionismo_base <- function( pinputexps, num_ext, num_crea, k, prob_cruza, 
   param_local$train$gan1 <- 273000
   param_local$train$gan0 <-  -7000
   
-  param_local$Creacionismo$semilla <- num_ext
-  param_local$Creacionismo$num_ext <- num_ext
-  param_local$Creacionismo$num_crea <- num_crea
-  param_local$Creacionismo$k <- k
-  param_local$Creacionismo$prob_cruza <- prob_cruza
-  param_local$Creacionismo$prob_mutacion <- prob_mutacion
-  param_local$Creacionismo$tasa_aprendizaje_poblacion <- tasa_aprendizaje_poblacion
-  param_local$Creacionismo$tasa_aprendizaje_atributo <- tasa_aprendizaje_atributo
-  param_local$Creacionismo$canaritos_ratio <- 0.2
-  param_local$Creacionismo$canaritos_desvios <- canaritos_desvio
+  param_local$Creacionismo$num_crea <- num_crea # Cantidad de atributos generados en una generación
+  param_local$Creacionismo$k <- k # Cantidad de generaciones
+  param_local$Creacionismo$prob_cruza <- prob_cruza # Probabilidad de combinar atributos
+  param_local$Creacionismo$prob_mutacion <- prob_mutacion # Probabilidad de transformar atributos (Ejem: Lag, Forier, Ventanas, etc...)
+  param_local$Creacionismo$genetico <- TRUE # Si pasa por todas las variables, todas contra todas, o hace selección natural -- no implementado el FALSE
+  param_local$Creacionismo$reforzado <- TRUE # Si "aprendemos" en cada selección o no
+  param_local$Creacionismo$jerarquico <- TRUE # Si calculamos aptitud y damos recompenzas para cada atributo o solo para la población. Si es TRUE es para todo. -- no implementado el FALSE
+  param_local$Creacionismo$tasa_aprendizaje_poblacion <- tasa_aprendizaje_poblacion # Aprendizaje a nivel de población
+  param_local$Creacionismo$tasa_aprendizaje_atributo <- tasa_aprendizaje_atributo # Aprendizaje a nivel de atributo
+  param_local$Creacionismo$canaritos_ratio <- 0.2 # Parametro de canaritos
+  param_local$Creacionismo$canaritos_desvios <- canaritos_desvio # Parametro para la poda, debe ser negativo. Idealmente entre 0 y -2
 
   return( exp_correr_script( param_local ) ) # linea fija
 }
@@ -447,8 +448,9 @@ wf_junio_creacionismo_vars2 <- function( pnombrewf )
     mtry_ratio= 0.2
   )
 
-  FE_creacionismo_base(num_ext=600, 
-    num_crea=1000, k=3, 
+  FE_creacionismo_base( 
+    num_crea=1000,
+    k=3, 
     prob_cruza=0.75, 
     prob_mutacion=0.25, 
     tasa_aprendizaje_atributo=0.1, 
