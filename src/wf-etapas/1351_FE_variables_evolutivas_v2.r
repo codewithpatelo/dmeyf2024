@@ -151,5 +151,7 @@ nombre_dataset <- paste0("dataset_iter_", k, ".csv.gz")
 fwrite(dataset, file = nombre_dataset, logical01 = TRUE, sep = ",")
 cat( "Finalizado grabado del dataset nuevo\n" )
 
+GrabarOutput()
+
 cat( "ETAPA  z1351_FE_variables_evolutivas.r  END\n")
 action_finalizar( archivos = c()) 

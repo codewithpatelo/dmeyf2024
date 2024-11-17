@@ -136,7 +136,7 @@ FEhist_base <- function( pinputexps)
 
   param_local$lag1 <- TRUE
   param_local$lag2 <- TRUE # no me engraso con los lags de orden 2
-  param_local$lag3 <- TRUE # no me engraso con los lags de orden 3
+  param_local$lag3 <- FALSE # no me engraso con los lags de orden 3
 
   # no me engraso las manos con las tendencias
   param_local$Tendencias1$run <- TRUE  # FALSE, no corre nada de lo que sigue
@@ -424,7 +424,7 @@ EV_evaluate_conclase_gan <- function( pinputexps )
 # Este es el  Workflow Baseline
 # Que predice 202106 donde SI hay clase completa
 
-wf_junio_creacionismo_vars <- function( pnombrewf )
+wf_junio_creacionismo_vars2 <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea workflow inicial fija
 
@@ -443,6 +443,8 @@ wf_junio_creacionismo_vars <- function( pnombrewf )
     mtry_ratio= 0.2
   )
 
+  FE_creacionismo_base(k=k, cn=sprintf("%04d", cn))
+
   CN_canaritos_asesinos_base(ratio=0.2, desvio=-1.0)
 
   # Etapas modelado
@@ -450,7 +452,7 @@ wf_junio_creacionismo_vars <- function( pnombrewf )
   ht <- HT_tuning_base( bo_iteraciones = 42 )  # iteraciones inteligentes
 
   # Etapas finales
-  fm <- FM_final_models_lightgbm( c(ht, ts6), ranks=c(1), qsemillas=5 )
+  fm <- FM_final_models_lightgbm( c(ht, ts6), ranks=c(1), qsemillas=20 )
   SC_scoring( c(fm, ts6) )
   EV_evaluate_conclase_gan() # evaluacion contra mes CON clase
 
@@ -461,5 +463,5 @@ wf_junio_creacionismo_vars <- function( pnombrewf )
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202106
-wf_junio_creacionismo_vars()
+wf_junio_creacionismo_vars2()
 
