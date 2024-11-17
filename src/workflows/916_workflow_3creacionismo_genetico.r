@@ -255,7 +255,7 @@ FE_creacionismo_base <- function( pinputexps, num_ext, num_crea, k, prob_cruza, 
   param_local$Creacionismo$tasa_aprendizaje_poblacion <- tasa_aprendizaje_poblacion
   param_local$Creacionismo$tasa_aprendizaje_atributo <- tasa_aprendizaje_atributo
   param_local$Creacionismo$canaritos_ratio <- 0.2
-  param_local$Creacionismo$canaritos_desvios <- desvio
+  param_local$Creacionismo$canaritos_desvios <- canaritos_desvio
 
   return( exp_correr_script( param_local ) ) # linea fija
 }
@@ -453,7 +453,7 @@ wf_junio_creacionismo_vars2 <- function( pnombrewf )
     prob_mutacion=0.25, 
     tasa_aprendizaje_atributo=0.1, 
     tasa_aprendizaje_poblacion=0.2,
-     desvio_canaritos=-1
+     canaritos_desvio=-1
   )
 
   # Etapas modelado
