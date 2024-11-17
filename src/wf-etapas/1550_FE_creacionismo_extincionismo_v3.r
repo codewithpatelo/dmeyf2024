@@ -35,7 +35,7 @@ prob_cruza <- envg$PARAM$Creacionismo$prob_cruza
 prob_mutacion <- envg$PARAM$Creacionismo$prob_mutacion
 
 prob_operadores_cruza <- c("+" = 0.25, "-" = 0.25, "*" = 0.25, "/" = 0.25)
-prob_operadores_mutacion <- c("lag1" = 0.25, "lag2" = 0.25, "ventana3" = 0.25, "fourier" = 0.25)
+prob_operadores_mutacion <- c("lag1" = 0.35, "lag2" = 0.35, "ventana3" = 0.25, "fourier" = 0.05)
 
 tasa_aprendizaje_poblacion <- envg$PARAM$Creacionismo$tasa_aprendizaje_poblacion
 
@@ -457,15 +457,18 @@ actualizar_probabilidades_poblacion <- function(aptitud_actual, aptitud_anterior
 # Bucle para crear nuevas variables y agregar al dataset
 Creacion_Nueva_Generacion <- function() {
   cat( "Inicio Creacion_Nueva_Generacion()\n")
+  set.seed(NULL) # Algo no estaba funcionando bien con la semillas
+  set.seed(semilla+k)
   
   
   num_vars_inicio = ncol(dataset)
+  cat( "N Población Actual: ", num_vars_inicio, "\n")
   if (num_vars_inicio > num_poblacion_creacion) {
     vars_a_crear = 1
   } else {
     vars_a_crear <- num_poblacion_creacion - num_vars_inicio
   }
-
+  
   num_vars_objetivo <- num_vars_inicio + vars_a_crear
   
   for (l in 1:vars_a_crear) {
@@ -475,7 +478,9 @@ Creacion_Nueva_Generacion <- function() {
     cat("Objetivo de creación: ", l, "/", vars_a_crear, "(",ncol(dataset), "/", num_vars_objetivo, ")\n")
     
     # Selecciona el tipo de operador según las probabilidades prob_cruza y prob_mutacion
-    cat("Selecionando tipo de operador...\n")
+    cat("Seleccionando tipo de operador...\n")
+    cat("prob_cruza: ", prob_cruza, "prob_mutacion: ", prob_mutacion, "\n")
+    
     tipo_operador <- sample(c("cruza", "mutacion"), 1, prob = c(prob_cruza, prob_mutacion))
     cat("Tipo operador:", tipo_operador, "\n")
     
@@ -631,10 +636,11 @@ prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(data
 cat( "Variables creacionistas geneticas\n")
 # Inicialización de la generación y ajuste de probabilidades
 aptitud_anterior_poblacion <<- 0
-set.seed(semilla)
+
 
 for (k in 1:num_generaciones) { # Número de generaciones
-  cat( "Inicio Creacionismo de Generacion nro ", k, "\n")
+  cat("Inicio Creacionismo de Generacion nro", k, "con semilla:", semilla + k, "\n")
+
   nuevos_atributos <<- data.table()
   # Llamar a la función para crear la nueva generación
   Creacion_Nueva_Generacion()
