@@ -16,6 +16,8 @@ require("yaml", quietly=TRUE)
 #------------------------------------------------------------------------------
 # Parametros del Algoritmo Genetico "Reforzado"
 #------------------------------------------------------------------------------
+evg$PARAM$Creacionismo$semilla <- envg$PARAM$semilla
+  
 semilla <- envg$PARAM$Creacionismo$semilla
 num_poblacion_extincion <- ifelse(!is.null(envg$PARAM$Creacionismo$num_ext) && !is.na(envg$PARAM$Creacionismo$num_ext), 
                                   envg$PARAM$Creacionismo$num_ext, 
@@ -34,13 +36,12 @@ prob_mutacion <- ifelse(!is.null(envg$PARAM$Creacionismo$prob_mutacion) && !is.n
                                   0.1) 
 prob_operadores_cruza <- c("+" = 0.25, "-" = 0.25, "*" = 0.25, "/" = 0.25)
 prob_operadores_mutacion <- c("lag1" = 0.25, "lag2" = 0.25, "ventana3" = 0.25, "fourier" = 0.25)
-prob_atributos <- 0
 
 tasa_aprendizaje_poblacion <- ifelse(!is.null(envg$PARAM$Creacionismo$tasa_aprendizaje) && !is.na(envg$PARAM$Creacionismo$tasa_aprendizaje), 
                                   envg$PARAM$Creacionismo$tasa_aprendizaje_poblacion, 
                                   0.2) 
 
-tasa_aprendizaje_poblacion <- ifelse(!is.null(envg$PARAM$Creacionismo$tasa_aprendizaje) && !is.na(envg$PARAM$Creacionismo$tasa_aprendizaje), 
+tasa_aprendizaje_atributo <- ifelse(!is.null(envg$PARAM$Creacionismo$tasa_aprendizaje) && !is.na(envg$PARAM$Creacionismo$tasa_aprendizaje), 
                                   envg$PARAM$Creacionismo$tasa_aprendizaje_atributo, 
                                   0.1) 
 
@@ -53,16 +54,6 @@ operadores_mutacion <- c("lag1", "lag2", "ventana3", "fourier")
 
 # Inicializo poblacion como un data.table vacío
 poblacion_atributos <- data.table()
-
-
-es_lageable <- function(atributo, cols_lageables) {
-  # Verifica si el atributo está dentro de las columnas lageables
-  if (atributo %in% cols_lageables) {
-    return(TRUE)
-  } else {
-    return(FALSE)
-  }
-}
 
 
 param_lgbm <- list(
@@ -175,9 +166,6 @@ CanaritosExtincionistas <- function(
     free_raw_data = FALSE
   )
 
-
-  
-
   set.seed(canaritos_semilla, kind = "L'Ecuyer-CMRG")
   modelo <- lgb.train(
     data = dtrain,
@@ -187,7 +175,7 @@ CanaritosExtincionistas <- function(
     verbose = -100
   )
 
-  tb_importancia <- lgb.importance(model = modelo)
+  tb_importancia <<- lgb.importance(model = modelo)
   tb_importancia[, pos := .I]
 
   fwrite(tb_importancia,
@@ -198,7 +186,7 @@ CanaritosExtincionistas <- function(
 
   umbral <- tb_importancia[
     Feature %like% "canarito",
-    median(pos) + canaritos_desvios * sd(pos)
+    median(pos) + canaritos_desvios *0 sd(pos)
   ] # Atencion corto en la mediana mas desvios!!
 
   col_utiles <- tb_importancia[
@@ -215,9 +203,10 @@ CanaritosExtincionistas <- function(
 
   dataset[, (col_inutiles) := NULL]
 
-  cat( "fin CanaritosAsesinos()\n")
+  cat( "fin CanaritosExtincionistas()\n")
 }
 #------------------------------------------------------------------------------
+# UTILIDADES
 #------------------------------------------------------------------------------
 
 atributos_presentes <- function( patributos )
@@ -227,6 +216,35 @@ atributos_presentes <- function( patributos )
 
   return(  length( atributos ) == length( comun ) )
 }
+
+# Función para chequear si las escalas de dos variables son muy distintas
+chequear_escala <- function(padre, madre) {
+  # Calculamos el rango o desviación estándar para cada variable
+  rango_padre <- diff(range(padre, na.rm = TRUE))
+  rango_madre <- diff(range(madre, na.rm = TRUE))
+
+  # Comparamos los rangos de las dos variables
+  if (rango_padre > 10 * rango_madre || rango_madre > 10 * rango_padre) {
+    # Si las escalas son muy diferentes, imprimimos un mensaje de advertencia
+    cat("¡Advertencia! Las escalas de las variables 'padre' y 'madre' son muy distintas.\n")
+    cat("Rango de 'padre':", rango_padre, "\n")
+    cat("Rango de 'madre':", rango_madre, "\n")
+    cat("La suma de estas variables podría no ser adecuada.\n")
+  }
+}
+
+es_lageable <- function(atributo, cols_lageables) {
+  # Verifica si el atributo está dentro de las columnas lageables
+  if (atributo %in% cols_lageables) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+
+#------------------------------------------------------------------------------
+# FUNCIONES ALGORITMO GENETICO REFORZADO
+#------------------------------------------------------------------------------
 
 operador_cruza <- function(padre, madre, operador) {
   # Ejecuta la operación de cruza y calcula el nuevo atributo
@@ -261,50 +279,132 @@ operador_mutacion <- function(gen, operador) {
 }
 
 # Función de aptitud individual (simple LightGBM)
-funcion_aptitud_individual <- function(atributo) {
-  cat("Calculando aptitud para ", names(atributo)[1])
-  dtrain <- lgb.Dataset(data = dataset[[atributo]], label = dataset[["clase_ternaria"]])
-  modelo <- lgb.train(params = list(objective = "multiclass", num_class = 3), data = dtrain, nrounds = 10)
-  # Retorna el score de importancia (o el métrico deseado)
-  importancia <- lgb.importance(modelo)
-  score <- importancia[1, "Gain"]
-  cat("Puntaje ", score)
-  return(score)
+funcion_aptitud_atributo <- function(nueva_variable) {
+  cat("Inicio evaluación individual para:", nueva_variable, "\n")
+  
+  # Crear una copia del dataset para evitar modificar el original
+  dataset_local <- copy(dataset)
+  
+  # Generar la clase binaria
+  dataset_local[, clase01 := 0L]
+  dataset_local[get(clase) %in% envg$PARAM$train$clase01_valor1, clase01 := 1L]
+  
+  # Agregar la nueva variable al dataset
+  dataset_local[, nueva_var := get(nueva_variable)]
+  
+  # Seleccionar campos relevantes
+  campos_buenos <- setdiff(colnames(dataset_local), c("clase01"))
+  
+  # Crear un dataset LightGBM con una muestra
+  set.seed(semilla)
+  idx_sample <- sample(1:nrow(dataset_local), size = min(5000, nrow(dataset_local)))
+  
+  dtrain <- lgb.Dataset(
+    data = data.matrix(dataset_local[idx_sample, campos_buenos, with = FALSE]),
+    label = dataset_local[idx_sample, clase01],
+    free_raw_data = FALSE
+  )
+  
+  # Entrenar un modelo muy sencillo
+  modelo <- lgb.train(
+    data = dtrain,
+    param = list(
+      objective = "binary",
+      learning_rate = 0.1,
+      num_leaves = 15,
+      min_data_in_leaf = 20,
+      feature_fraction = 0.8,
+      bagging_fraction = 0.8,
+      bagging_freq = 1
+    ),
+    nrounds = 50,
+    verbose = -1
+  )
+  
+  # Obtener la importancia de las variables
+  tb_importancia <- lgb.importance(model = modelo)
+  
+  # Extraer la importancia de la nueva variable
+  importancia_nueva_var <- tb_importancia[Feature == "nueva_var", Gain]
+  if (is.na(importancia_nueva_var)) importancia_nueva_var <- 0
+  
+  # Normalizar la importancia entre 0 y 1
+  max_importancia <- max(tb_importancia$Gain, na.rm = TRUE)
+  ratio_importancia <- importancia_nueva_var / max_importancia
+  
+  cat("Importancia normalizada para", nueva_variable, ":", ratio_importancia, "\n")
+  
+  return(ratio_importancia)
 }
 
 
+
 # Función de aptitud global (LightGBM con todas las variables)
-funcion_aptitud_global <- function() {
-  dtrain <- lgb.Dataset(data = as.matrix(dataset[, .SD, .SDcols = setdiff(names(dataset), objetivo)]), 
-                        label = dataset[[objetivo]])
-  modelo <- lgb.train(params = list(objective = "multiclass", num_class = 3), data = dtrain, nrounds = 50)
-  # Retorna un métrico global
-  score_global <- mean(modelo$record_evals$train$multi_logloss)
-  return(score_global)
+funcion_aptitud_poblacion <- function(nuevos_atributos) {
+  # Verificar que tb_importancia esté disponible
+  if (!exists("tb_importancia")) {
+    stop("La tabla 'tb_importancia' no ha sido inicializada. Ejecuta primero 'CanaritosExtincionistas'.")
+  }
+  
+  # Obtener el top 20 de atributos según importancia
+  top_20 <- tb_importancia[pos <= 20, Feature]
+  
+  # Calcular el número de atributos de 'nuevos_atributos' presentes en el top 20
+  count_in_top_20 <- sum(nuevos_atributos %in% top_20)
+  
+  # Normalizar el ratio (número de atributos en top 20 dividido por total de nuevos atributos)
+  ratio <- count_in_top_20 / length(nuevos_atributos)
+  
+  # Retornar ratio normalizado
+  cat("Ratio de atributos en el top 20: ", ratio, "\n")
+  return(ratio)
 }
 
 
 # Actualización de probabilidades (individual)
 actualizar_probabilidades_atributo <- function(atributo, aptitud, tipo_operador, operador) {
-  cat("Actualizando probabilidades para atributo ", names(atributo)[1])
-  prob_atributos[[atributo]] <- prob_atributos[[atributo]] + aptitud * 0.1
-  prob_atributos <- prob_atributos / sum(prob_atributos) # Normaliza
-  cat("Nueva prob: ", prob_atributos[[atributo]])
-
-  prob_cruza <- prob_cruza + 0.1 * aptitud
-  prob_mutacion <- prob_mutacion + 0.1 * aptitud
-
-  # Normaliza las probabilidades de cruza y mutación
+  cat("Actualizando probabilidades para atributo ", names(atributo)[1], "\n")
+  
+  # Actualización de probabilidades del atributo
+  prob_atributos[[atributo]] <<- prob_atributos[[atributo]] + aptitud * 0.1
+  prob_atributos <<- prob_atributos / sum(unlist(prob_atributos))  # Normaliza
+  cat("Nueva probabilidad para atributo ", names(atributo)[1], ": ", prob_atributos[[atributo]], "\n")
+  
+  if (tipo_operador == "cruza") {
+    # Actualizar probabilidad global de cruza
+    prob_cruza <<- prob_cruza + 0.1 * aptitud
+    
+    # Actualizar probabilidad de los operadores de cruza
+    prob_operadores_cruza[[operador]] <<- prob_operadores_cruza[[operador]] + 0.1 * aptitud
+    prob_operadores_cruza <<- prob_operadores_cruza / sum(unlist(prob_operadores_cruza))  # Normaliza
+    
+    cat("Nueva probabilidad de cruza: ", prob_cruza, "\n")
+    cat("Nueva probabilidad de operadores de cruza: ", prob_operadores_cruza, "\n")
+    
+  } else if (tipo_operador == "mutación") {
+    # Actualizar probabilidad global de mutación
+    prob_mutacion <<- prob_mutacion + 0.1 * aptitud
+    
+    # Actualizar probabilidad de los operadores de mutación
+    prob_operadores_mutacion[[operador]] <<- prob_operadores_mutacion[[operador]] + 0.1 * aptitud
+    prob_operadores_mutacion <<- prob_operadores_mutacion / sum(unlist(prob_operadores_mutacion))  # Normaliza
+    
+    cat("Nueva probabilidad de mutación: ", prob_mutacion, "\n")
+    cat("Nueva probabilidad de operadores de mutación: ", prob_operadores_mutacion, "\n")
+  }
+  
+  # Normalizar las probabilidades globales de cruza y mutación
   total <- prob_cruza + prob_mutacion
   prob_cruza <<- prob_cruza / total
   prob_mutacion <<- prob_mutacion / total
-
-  cat("Nueva prob cruza: ", prob_cruza)
-  cat("Nueva prob mutacion: ", prob_mutacion)
+  
+  cat("Probabilidades normalizadas: Cruza = ", prob_cruza, ", Mutación = ", prob_mutacion, "\n")
 }
 
 
+
 actualizar_probabilidades_poblacion <- function(aptitud_actual, aptitud_anterior) {
+  cat( "Actualizando probabilidades...")
   recompenza <- aptitud_actual - aptitud_anterior
   prob_cruza <- prob_cruza + tasa_aprendizaje * recompenza
   prob_mutacion <- prob_mutacion + tasa_aprendizaje * recompenza
@@ -465,22 +565,10 @@ cat( "variables creacionistas geneticas\n")
 aptitud_anterior_poblacion <- -Inf
 
 for (k in 1:num_generaciones) { # Número de generaciones
-  cat( "Inicio Creacionismo de Generacion nro ", gen)
+  cat( "Inicio Creacionismo de Generacion nro ", k)
   poblacion_atributos <- data.table()
   # Llamar a la función para crear la nueva generación
-  Creacion_Nueva_Generacion(dataset, num_poblacion_creacion)
-
-
-  # Calcular el fitness de la generación actual
-  aptitud_actual_poblacion <- funcion_aptitud_global()
-  cat("Generación:", k, "Aptitud:", aptitud_actual_poblacion, "Probabilidad de Cruza:", prob_cruza, "Probabilidad de Mutación:", prob_mutacion, "\n")
-
-  # Ajustar probabilidades usando RL
-  probabilidades <- ajustar_probabilidades_poblacion(aptitud_actual_poblacion, aptitud_anterior_poblacion)
-
-
-  # Actualizar el fitness anterior
-  aptitud_anterior_poblacion <- aptitud_actual_poblacion
+  Creacion_Nueva_Generacion()
 
   cat( "escritura de variables nuevas\n")
   cat( "Iniciando grabado de variables nuevas\n" )
@@ -524,7 +612,9 @@ for (k in 1:num_generaciones) { # Número de generaciones
       "valores NaN 0/0 en tu dataset. Seran pasados arbitrariamente a 0\n"
     )
   }
-  #--------------------------------------------------------------------------
+
+
+  
   # Elimino las variables que no son tan importantes en el dataset
   inicio_key <- paste0("ncol_iter", k, "_inicio")
   fin_key <- paste0("ncol_iter", k, "_fin")
@@ -536,7 +626,22 @@ for (k in 1:num_generaciones) { # Número de generaciones
     GVEZ = k
   )
   envg$OUTPUT$Creacionismo[[fin_key]] <- ncol(dataset)
+  #--------------------------------------------------------------------------
+  # Calcular el fitness de la generación actual
+   
+  aptitud_actual_poblacion <- funcion_aptitud_poblacion()
+  cat("Generación:", k, "Aptitud:", aptitud_actual_poblacion, "Probabilidad de Cruza:", prob_cruza, "Probabilidad de Mutación:", prob_mutacion, "\n")
+  aptitud_key <- paste0("iter", k, "_aptitud")
+  envg$OUTPUT$Creacionismo[[aptitud_key]] <- aptitud_actual_poblacion
+
+  # Ajustar probabilidades usando RL
+  probabilidades <- actualizar_probabilidades_poblacion(aptitud_actual_poblacion, aptitud_anterior_poblacion)
+
+  # Actualizar el fitness anterior
+  aptitud_anterior_poblacion <- aptitud_actual_poblacion
   GrabarOutput()
+
+
 
 #------------------------------------------------------------------------------
 
@@ -580,18 +685,6 @@ fwrite(tb_campos,
 )
 
 #------------------------------------------------------------------------------
-cat( "Fin del programa\n")
-
-envg$OUTPUT$dataset$ncol <- ncol(dataset)
-envg$OUTPUT$dataset$nrow <- nrow(dataset)
-envg$OUTPUT$time$end <- format(Sys.time(), "%Y%m%d %H%M%S")
-GrabarOutput()
-
-#------------------------------------------------------------------------------
-# finalizo la corrida
-#  archivos tiene a los files que debo verificar existen para no abortar
-
-
 cat( "Fin del programa\n")
 
 envg$OUTPUT$dataset$ncol <- ncol(dataset)

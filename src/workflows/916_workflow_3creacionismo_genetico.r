@@ -230,12 +230,12 @@ FErf_attributes_base <- function( pinputexps,
 # Canaritos Asesinos   Baseline
 #  azaroso, utiliza semilla
 
-CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
+FE_creacionismo_base <- function( pinputexps, num_ext, num_crea, k, prob_cruza, prob_mutacion, tasa_aprendizaje_atributo, tasa_aprendizaje_poblacion, canaritos_desvio)
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/z1601_CN_canaritos_asesinos.r"
+  param_local$meta$script <- "/src/wf-etapas/1550_FE_creacionismo_extincionismo_v3.r"
 
   # Parametros de un LightGBM que se genera para estimar la column importance
   param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
@@ -245,13 +245,17 @@ CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
   param_local$train$undersampling <- 0.1
   param_local$train$gan1 <- 273000
   param_local$train$gan0 <-  -7000
-
-
-  # ratio varia de 0.0 a 2.0
-  # desvio varia de -4.0 a 4.0
-  param_local$CanaritosAsesinos$ratio <- ratio
-  # desvios estandar de la media, para el cutoff
-  param_local$CanaritosAsesinos$desvios <- desvio
+  
+  param_local$Creacionismo$semilla <- num_ext
+  param_local$Creacionismo$num_ext <- num_ext
+  param_local$Creacionismo$num_crea <- num_crea
+  param_local$Creacionismo$k <- k
+  param_local$Creacionismo$prob_cruza <- prob_cruza
+  param_local$Creacionismo$prob_mutacion <- prob_mutacion
+  param_local$Creacionismo$tasa_aprendizaje_poblacion <- tasa_aprendizaje_poblacion
+  param_local$Creacionismo$tasa_aprendizaje_atributo <- tasa_aprendizaje_atributo
+  param_local$Creacionismo$canaritos_ratio <- 0.2
+  param_local$Creacionismo$canaritos_desvios <- desvio
 
   return( exp_correr_script( param_local ) ) # linea fija
 }
@@ -443,9 +447,14 @@ wf_junio_creacionismo_vars2 <- function( pnombrewf )
     mtry_ratio= 0.2
   )
 
-  FE_creacionismo_base(k=k, cn=sprintf("%04d", cn))
-
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=-1.0)
+  FE_creacionismo_base(num_ext=600, 
+    num_crea=1000, k=3, 
+    prob_cruza=0.75, 
+    prob_mutacion=0.25, 
+    tasa_aprendizaje_atributo=0.1, 
+    tasa_aprendizaje_poblacion=0.2,
+     desvio_canaritos=-1
+  )
 
   # Etapas modelado
   ts6 <- TS_strategy_base6()
