@@ -463,14 +463,16 @@ Creacion_Nueva_Generacion <- function() {
   if (num_vars_inicio > num_poblacion_creacion) {
     vars_a_crear = 1
   } else {
-    vars_a_crear = num_poblacion_creacion - num_vars_inicio
+    vars_a_crear <- num_poblacion_creacion - num_vars_inicio
   }
+
+  num_vars_objetivo <- num_vars_inicio + vars_a_crear
   
   for (l in 1:vars_a_crear) {
     exito <- FALSE
     cat( "Var -> ", l, "\n")
     cat("Generando nueva variable, total actuales:", ncol(dataset), "\n")
-    cat("Objetivo de creación: ",l, "/", vars_a_crear, "(", num_vars_inicio+vars_a_crear, "/", num_vars_inicio ")\n")
+    cat("Objetivo de creación: ", l, "/", vars_a_crear, "(",ncol(dataset), "/", num_vars_objetivo, ")\n")
     
     # Selecciona el tipo de operador según las probabilidades prob_cruza y prob_mutacion
     cat("Selecionando tipo de operador...\n")
