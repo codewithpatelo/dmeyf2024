@@ -230,6 +230,35 @@ FErf_attributes_base <- function( pinputexps,
 # Canaritos Asesinos   Baseline
 #  azaroso, utiliza semilla
 
+CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
+{
+  if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
+
+
+  param_local$meta$script <- "/src/wf-etapas/z1601_CN_canaritos_asesinos.r"
+
+  # Parametros de un LightGBM que se genera para estimar la column importance
+  param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
+  param_local$train$positivos <- c( "BAJA+2")
+  param_local$train$training <- c( 202101, 202102, 202103)
+  param_local$train$validation <- c( 202105 )
+  param_local$train$undersampling <- 0.1
+  param_local$train$gan1 <- 273000
+  param_local$train$gan0 <-  -7000
+
+
+  # ratio varia de 0.0 a 2.0
+  # desvio varia de -4.0 a 4.0
+  param_local$CanaritosAsesinos$ratio <- ratio
+  # desvios estandar de la media, para el cutoff
+  param_local$CanaritosAsesinos$desvios <- desvio
+
+  return( exp_correr_script( param_local ) ) # linea fija
+}
+#------------------------------------------------------------------------------
+# Canaritos Asesinos   Baseline
+#  azaroso, utiliza semilla
+
 FE_creacionismo_base <- function( pinputexps, num_ext, num_crea, k, prob_cruza, prob_mutacion, tasa_aprendizaje_atributo, tasa_aprendizaje_poblacion, canaritos_desvio)
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
@@ -257,6 +286,7 @@ FE_creacionismo_base <- function( pinputexps, num_ext, num_crea, k, prob_cruza, 
   param_local$Creacionismo$tasa_aprendizaje_atributo <- tasa_aprendizaje_atributo # Aprendizaje a nivel de atributo
   param_local$Creacionismo$canaritos_ratio <- 0.2 # Parametro de canaritos
   param_local$Creacionismo$canaritos_desvios <- canaritos_desvio # Parametro para la poda, debe ser negativo. Idealmente entre 0 y -2
+  param_local$Creacionismo$canaritos_inicio <- TRUE
 
   param_local$Creacionismo$ <- canaritos_desvio # Parametro para la poda, debe ser negativo. Idealmente entre 0 y -2
   
@@ -436,12 +466,23 @@ wf_junio_creacionismo_vars4 <- function( pnombrewf )
   param_local <- exp_wf_init( pnombrewf ) # linea workflow inicial fija
   
   # Etapa especificacion dataset de la Segunda Competencia Kaggle
-  DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
+  DT_incorporar_dataset( "~/buckets/b1/datasets/dataset_iter_20.csv.gz")
   
   # Etapas preprocesamiento
   CA_catastrophe_base( metodo="MachineLearning")
-  FEintra_manual_base()
-  DR_drifting_base(metodo="rank_cero_fijo")
+  #FEintra_manual_base()
+  #DR_drifting_base(metodo="rank_cero_fijo")
+  
+  FE_creacionismo_base( 
+    num_crea=1300,
+    k=30, 
+    prob_cruza=0.75, 
+    prob_mutacion=0.25, 
+    tasa_aprendizaje_atributo=0.1, 
+    tasa_aprendizaje_poblacion=0.2,
+    canaritos_desvio=2
+  )
+
   FEhist_base()
   
   FErf_attributes_base( arbolitos= 20,
@@ -449,20 +490,12 @@ wf_junio_creacionismo_vars4 <- function( pnombrewf )
                         datos_por_hoja= 1000,
                         mtry_ratio= 0.2
   )
-  
-  FE_creacionismo_base( 
-    num_crea=1100,
-    k=20, 
-    prob_cruza=0.75, 
-    prob_mutacion=0.25, 
-    tasa_aprendizaje_atributo=0.1, 
-    tasa_aprendizaje_poblacion=0.2,
-    canaritos_desvio=1.5
-  )
+
+  CN_canaritos_asesinos_base(ratio=0.2, desvio=1.0)
   
   # Etapas modelado
   ts6 <- TS_strategy_base6()
-  ht <- HT_tuning_base( bo_iteraciones = 40 )  # iteraciones inteligentes
+  ht <- HT_tuning_base( bo_iteraciones = 35 )  # iteraciones inteligentes
   
   # Etapas finales
   fm <- FM_final_models_lightgbm( c(ht, ts6), ranks=c(1), qsemillas=20 )

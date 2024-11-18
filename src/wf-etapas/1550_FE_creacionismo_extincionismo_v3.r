@@ -200,7 +200,7 @@ CanaritosExtincionistas <- function(
   col_inutiles <- setdiff(colnames(dataset), col_utiles)
   
   dataset[, (col_inutiles) := NULL]
-
+  
   prob_atributos <<- prob_atributos[colnames(dataset)]
   prob_atributos <<- prob_atributos / sum(prob_atributos)  # Normaliza las probabilidades si es necesario
   
@@ -595,10 +595,10 @@ Creacion_Nueva_Generacion <- function(semilla_generacion) {
       
       
     }
-
     
-   prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(dataset))
-
+    
+    prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(dataset))
+    
     
     # Realiza la evaluación de aptitud de la nueva variable
     if (exito == TRUE && envg$PARAM$Creacionismo$reforzado == TRUE ) {
@@ -607,7 +607,7 @@ Creacion_Nueva_Generacion <- function(semilla_generacion) {
       cat("Actualizando probabilidades...\n")
       actualizar_probabilidades_atributo(paste0("iter_",k,"_var_",l), aptitud, tipo_operador, operador)
     }
-
+    
     
     
     
@@ -663,6 +663,26 @@ prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(data
 
 
 cat( "Variables creacionistas geneticas\n")
+
+if (envg$PARAM$Creacionismo$canaritos_inicio == TRUE) {
+   # Elimino las variables que no son tan importantes en el dataset
+  inicio_key <- paste0("ncol_iter", 0, "_inicio")
+  fin_key <- paste0("ncol_iter", 0, "_fin")
+  envg$OUTPUT$Creacionismo[[inicio_key]] <- ncol(dataset)
+  CanaritosExtincionistas(
+    canaritos_ratio = envg$PARAM$Creacionismo$canaritos_ratio,
+    canaritos_desvios = 2,
+    canaritos_semilla = envg$PARAM$Creacionismo$semilla,
+    GVEZ = 0
+  )
+  envg$OUTPUT$Creacionismo[[fin_key]] <- ncol(dataset)
+  
+  
+  cat("Actualizando longuitud de prob_atributos...")
+  prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(dataset))
+  cat("Longuitud probs: ",length(prob_atributos), "Longuitud dataset: ", ncol(dataset))
+}
+
 # Inicialización de la generación y ajuste de probabilidades
 aptitud_anterior_poblacion <<- 0
 
@@ -696,19 +716,19 @@ for (k in 1:num_generaciones) { # Número de generaciones
   
   # valvula de seguridad para evitar valores infinitos
   # paso los infinitos a NULOS
-  infinitos <- lapply(
-    names(dataset),
-    function(.name) dataset[, sum(is.infinite(get(.name)))]
-  )
+  #infinitos <- lapply(
+  #  names(dataset),
+  #  function(.name) dataset[, sum(is.infinite(get(.name)))]
+  #)
   
-  infinitos_qty <- sum(unlist(infinitos))
-  if (infinitos_qty > 0) {
-    cat(
-      "ATENCION, hay", infinitos_qty,
-      "valores infinitos en tu dataset. Seran pasados a NA\n"
-    )
-    dataset[mapply(is.infinite, dataset)] <<- NA
-  }
+  #infinitos_qty <- sum(unlist(infinitos))
+  #if (infinitos_qty > 0) {
+  #  cat(
+  #    "ATENCION, hay", infinitos_qty,
+  #    "valores infinitos en tu dataset. Seran pasados a NA\n"
+  #  )
+  #  dataset[mapply(is.infinite, dataset)] <<- NA
+  #}
   
   
   # valvula de seguridad para evitar valores NaN  que es 0/0
