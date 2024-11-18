@@ -12,6 +12,7 @@ require( "data.table" )
 require("yaml", quietly=TRUE)
 require("Rcpp", quietly=TRUE)
 require("lightgbm", quietly=TRUE)
+require("primes")
 
 #------------------------------------------------------------------------------
 
@@ -199,6 +200,9 @@ CanaritosExtincionistas <- function(
   col_inutiles <- setdiff(colnames(dataset), col_utiles)
   
   dataset[, (col_inutiles) := NULL]
+
+  prob_atributos <<- prob_atributos[colnames(dataset)]
+  prob_atributos <<- prob_atributos / sum(prob_atributos)  # Normaliza las probabilidades si es necesario
   
   cat( "fin CanaritosExtincionistas()\n")
 }
@@ -284,7 +288,7 @@ funcion_aptitud_atributo <- function(nueva_variable, nombre) {
   
   # Verifica que el vector nueva_variable tenga la longitud correcta
   if (length(nueva_variable) != nrow(dataset)) {
-    stop("La longitud de nueva_variable no coincide con el número de filas de dataset")
+    cat("La longitud de nueva_variable no coincide con el número de filas de dataset")
   }
   
   # Crear una copia del dataset para evitar modificar el original
@@ -409,7 +413,7 @@ actualizar_probabilidades_atributo <- function(atributo, aptitud, tipo_operador,
     prob_cruza <<- prob_cruza + 0.1 * aptitud
     
     # Actualizar probabilidad de los operadores de cruza
-    prob_operadores_cruza[[operador]] <<- prob_operadores_cruza[[operador]] + 0.1 * aptitud
+    prob_operadores_cruza[[operador]] <<- prob_operadores_cruza[[operador]] + tasa_aprendizaje_atributo * aptitud
     prob_operadores_cruza <<- prob_operadores_cruza / sum(prob_operadores_cruza)  # Normaliza
     
     cat("Nueva probabilidad de cruza: ", prob_cruza, "\n")
@@ -425,7 +429,7 @@ actualizar_probabilidades_atributo <- function(atributo, aptitud, tipo_operador,
     prob_mutacion <<- prob_mutacion + 0.1 * aptitud
     
     # Actualizar probabilidad de los operadores de mutación
-    prob_operadores_mutacion[[operador]] <<- prob_operadores_mutacion[[operador]] + 0.1 * aptitud
+    prob_operadores_mutacion[[operador]] <<- prob_operadores_mutacion[[operador]] + tasa_aprendizaje_atributo * aptitud
     prob_operadores_mutacion <<- prob_operadores_mutacion / sum(prob_operadores_mutacion)  # Normaliza
     
     cat("Nueva probabilidad de mutación: ", prob_mutacion, "\n")
@@ -455,10 +459,11 @@ actualizar_probabilidades_poblacion <- function(aptitud_actual, aptitud_anterior
 }
 
 # Bucle para crear nuevas variables y agregar al dataset
-Creacion_Nueva_Generacion <- function() {
-  cat( "Inicio Creacion_Nueva_Generacion()\n")
-  set.seed(NULL) # Algo no estaba funcionando bien con la semillas
-  set.seed(semilla+k)
+Creacion_Nueva_Generacion <- function(semilla_generacion) {
+  cat( "Inicio Creacion_Nueva_Generacion(), semilla: ", semilla_generacion, "\n")
+  
+  #set.seed(NULL) # Reinicio semilla
+  #set.seed(semilla_generacion)
   
   
   num_vars_inicio = ncol(dataset)
@@ -471,7 +476,10 @@ Creacion_Nueva_Generacion <- function() {
   
   num_vars_objetivo <- num_vars_inicio + vars_a_crear
   
+  
+  
   for (l in 1:vars_a_crear) {
+    
     exito <- FALSE
     cat( "Var -> ", l, "\n")
     cat("Generando nueva variable, total actuales:", ncol(dataset), "\n")
@@ -488,6 +496,8 @@ Creacion_Nueva_Generacion <- function() {
     if (tipo_operador == "cruza") {
       cat("Seleccionando atributos...\n")
       # Selecciona aleatoriamente dos atributos de la población
+      cat("Resumen de prob_atributos (primeros valores):\n")
+      cat(paste(names(head(sort(prob_atributos, decreasing = TRUE))), "=", head(sort(prob_atributos, decreasing = TRUE)), collapse = "\n"),"\n")
       indices <- sample(1:ncol(dataset), 2, prob = prob_atributos, replace = FALSE)
       padre <- dataset[[indices[1]]]
       madre <- dataset[[indices[2]]]
@@ -498,7 +508,14 @@ Creacion_Nueva_Generacion <- function() {
       
       # Selecciona un operador de cruza según sus probabilidades
       cat("Seleccionando operador...\n")
+      
+      cat("Probabilidades de operadores de cruza:\n")
+      cat(sprintf("%-10s %-5s\n", "Operador", "Probabilidad"))
+      cat(sprintf("%-10s %-5.2f\n", names(prob_operadores_cruza), prob_operadores_cruza), sep = "")
+      
       operador <- sample(names(prob_operadores_cruza), 1, prob = prob_operadores_cruza)
+      
+      
       cat("Operador:", operador, "\n")
       
       # Realiza la operación de cruza
@@ -537,6 +554,8 @@ Creacion_Nueva_Generacion <- function() {
     } else if (tipo_operador == "mutacion") {
       # Selecciona aleatoriamente un atributo de la población
       cat("Seleccionando atributo...\n")
+      cat("Resumen de prob_atributos (primeros valores):\n")
+      cat(paste(names(head(prob_atributos)), "=", head(prob_atributos), collapse = "\n"))
       indice <- sample(1:ncol(dataset), 1, prob = prob_atributos)
       gen <- dataset[[indice]]  # Obtiene la columna seleccionada
       gen_nombre <- names(dataset)[indice]
@@ -549,6 +568,11 @@ Creacion_Nueva_Generacion <- function() {
       } else {
         # Selecciona un operador de mutación según sus probabilidades
         cat("Seleccionando operador...\n")
+        
+        cat("\nProbabilidades de operadores de mutación:\n")
+        cat(sprintf("%-10s %-5s\n", "Operador", "Probabilidad"))
+        cat(sprintf("%-10s %-5.2f\n", names(prob_operadores_mutacion), prob_operadores_mutacion), sep = "")
+        
         operador <- sample(names(prob_operadores_mutacion), 1, prob = prob_operadores_mutacion)
         cat("Operador:", operador, "\n")
         
@@ -575,9 +599,9 @@ Creacion_Nueva_Generacion <- function() {
     # Realiza la evaluación de aptitud de la nueva variable
     if (exito == TRUE && envg$PARAM$Creacionismo$reforzado == TRUE ) {
       cat("Calculando aptitud nueva variable...\n")
-      aptitud <- funcion_aptitud_atributo(nuevo_atributo, cromosoma)
+      #aptitud <- funcion_aptitud_atributo(nuevo_atributo, cromosoma)
       cat("Actualizando probabilidades...\n")
-      prob_atributos <- rep(1 / length(dataset), length(dataset))
+      prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(dataset))
       actualizar_probabilidades_atributo(paste0("iter_",k,"_var_",l), aptitud, tipo_operador, operador)
     }
     
@@ -637,13 +661,21 @@ cat( "Variables creacionistas geneticas\n")
 # Inicialización de la generación y ajuste de probabilidades
 aptitud_anterior_poblacion <<- 0
 
+set.seed(NULL) # Algo no estaba funcionando bien con la semillas
+set.seed(semilla)  # Configurar una semilla inicial fija
+primos <<- generate_primes(min = 100000, max = 1000000)
+semillas <- sample(primos, num_generaciones)
+
 
 for (k in 1:num_generaciones) { # Número de generaciones
-  cat("Inicio Creacionismo de Generacion nro", k, "con semilla:", semilla + k, "\n")
-
+  semilla_generacion <- semillas[k]
+  rm(.Random.seed, envir=globalenv())
+  set.seed(semilla_generacion)
+  cat("Inicio Creacionismo de Generacion nro", k, "con semilla:", semilla_generacion, "\n")
+  
   nuevos_atributos <<- data.table()
   # Llamar a la función para crear la nueva generación
-  Creacion_Nueva_Generacion()
+  Creacion_Nueva_Generacion(semilla_generacion)
   
   cat( "Escritura de variables nuevas\n")
   cat( "Iniciando grabado de variables nuevas\n" )
@@ -655,6 +687,7 @@ for (k in 1:num_generaciones) { # Número de generaciones
   cat( "Finalizado grabado de nuevas variables\n" )
   
   #--------------------------------------------------------------------------
+  
   
   # valvula de seguridad para evitar valores infinitos
   # paso los infinitos a NULOS
@@ -671,6 +704,7 @@ for (k in 1:num_generaciones) { # Número de generaciones
     )
     dataset[mapply(is.infinite, dataset)] <<- NA
   }
+  
   
   # valvula de seguridad para evitar valores NaN  que es 0/0
   # paso los NaN a 0 , decision polemica si las hay
@@ -722,8 +756,9 @@ for (k in 1:num_generaciones) { # Número de generaciones
     
   }
   
-  GrabarOutput()
+  
 }
+#GrabarOutput()
 
 #------------------------------------------------------------------------------
 # grabo el dataset
