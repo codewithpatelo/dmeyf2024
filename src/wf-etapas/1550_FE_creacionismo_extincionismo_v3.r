@@ -595,15 +595,20 @@ Creacion_Nueva_Generacion <- function(semilla_generacion) {
       
       
     }
+
+    
+   prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(dataset))
+
     
     # Realiza la evaluación de aptitud de la nueva variable
     if (exito == TRUE && envg$PARAM$Creacionismo$reforzado == TRUE ) {
       cat("Calculando aptitud nueva variable...\n")
       #aptitud <- funcion_aptitud_atributo(nuevo_atributo, cromosoma)
       cat("Actualizando probabilidades...\n")
-      prob_atributos <<- setNames(rep(1 / ncol(dataset), ncol(dataset)), colnames(dataset))
       actualizar_probabilidades_atributo(paste0("iter_",k,"_var_",l), aptitud, tipo_operador, operador)
     }
+
+    
     
     
     
