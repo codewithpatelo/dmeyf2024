@@ -251,8 +251,8 @@ FE_creacionismo_base <- function( pinputexps, num_ext, num_crea, k, prob_cruza, 
   param_local$Creacionismo$prob_cruza <- prob_cruza # Probabilidad de combinar atributos
   param_local$Creacionismo$prob_mutacion <- prob_mutacion # Probabilidad de transformar atributos (Ejem: Lag, Forier, Ventanas, etc...)
   param_local$Creacionismo$genetico <- TRUE # Si pasa por todas las variables, todas contra todas, o hace selección natural -- no implementado el FALSE
-  param_local$Creacionismo$reforzado <- TRUE # Si "aprendemos" en cada selección o no
-  param_local$Creacionismo$jerarquico <- TRUE # Si calculamos aptitud y damos recompenzas para cada atributo o solo para la población. Si es TRUE es para todo. -- no implementado el FALSE
+  param_local$Creacionismo$reforzado <- FALSE # Si "aprendemos" en cada selección o no
+  param_local$Creacionismo$jerarquico <- FALSE # Si calculamos aptitud y damos recompenzas para cada atributo o solo para la población. Si es TRUE es para todo. -- no implementado el FALSE
   param_local$Creacionismo$tasa_aprendizaje_poblacion <- tasa_aprendizaje_poblacion # Aprendizaje a nivel de población
   param_local$Creacionismo$tasa_aprendizaje_atributo <- tasa_aprendizaje_atributo # Aprendizaje a nivel de atributo
   param_local$Creacionismo$canaritos_ratio <- 0.2 # Parametro de canaritos
@@ -449,13 +449,13 @@ wf_junio_creacionismo_vars2 <- function( pnombrewf )
   )
 
   FE_creacionismo_base( 
-    num_crea=1000,
-    k=3, 
+    num_crea=950,
+    k=10, 
     prob_cruza=0.75, 
     prob_mutacion=0.25, 
     tasa_aprendizaje_atributo=0.1, 
     tasa_aprendizaje_poblacion=0.2,
-     canaritos_desvio=-1
+     canaritos_desvio=-0.5
   )
 
   # Etapas modelado
