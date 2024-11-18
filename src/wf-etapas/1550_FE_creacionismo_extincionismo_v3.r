@@ -36,7 +36,7 @@ prob_cruza <- envg$PARAM$Creacionismo$prob_cruza
 prob_mutacion <- envg$PARAM$Creacionismo$prob_mutacion
 
 prob_operadores_cruza <- c("+" = 0.25, "-" = 0.25, "*" = 0.25, "/" = 0.25)
-prob_operadores_mutacion <- c("lag1" = 0.35, "lag2" = 0.35, "ventana3" = 0.25, "fourier" = 0.05)
+prob_operadores_mutacion <- c("lag1" = 0.35, "lag2" = 0.35, "ventana3" = 0.3, "fourier" = 0)
 
 tasa_aprendizaje_poblacion <- envg$PARAM$Creacionismo$tasa_aprendizaje_poblacion
 

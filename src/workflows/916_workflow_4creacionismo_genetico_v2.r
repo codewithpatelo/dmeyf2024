@@ -491,7 +491,7 @@ wf_junio_creacionismo_vars4 <- function( pnombrewf )
                         mtry_ratio= 0.2
   )
 
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=1.0)
+  CN_canaritos_asesinos_base(ratio=0.2, desvio=0)
   
   # Etapas modelado
   ts6 <- TS_strategy_base6()
