@@ -429,7 +429,7 @@ EV_evaluate_conclase_gan <- function( pinputexps )
 # Este es el  Workflow Baseline
 # Que predice 202106 donde SI hay clase completa
 
-wf_junio_creacionismo_vars2 <- function( pnombrewf )
+wf_junio_creacionismo_vars3 <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea workflow inicial fija
 
@@ -474,5 +474,5 @@ wf_junio_creacionismo_vars2 <- function( pnombrewf )
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202106
-wf_junio_creacionismo_vars2()
+wf_junio_creacionismo_vars3()
 
