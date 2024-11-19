@@ -1,0 +1,17 @@
+
+
+# DT
+# Catastrofe
+# Clusterizacion
+# FeIntra -> Con mejores variables creacionistas + Imputaciones Neutrosoficas
+# DR -> Rank fijo
+# FeHist -> Lags 1/2 Tedencias 1
+# FERf
+# Creacionismo
+# FeHist
+# FERf
+# Canaritos
+# Ts strategy Meses (202104, 202103, 202102,
+    202101, 202012, 202011, 202002, 202001, 201912, 201911, 201910, 201909, 201908)
+# HT 35 iters xboost bayesiana
+# xboost
