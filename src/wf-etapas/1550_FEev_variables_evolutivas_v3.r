@@ -260,16 +260,15 @@ setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
 # Elimino las variables que no son tan importantes en el dataset
 # with great power comes grest responsability
 #ACA HAY QUE EMPEZAR UN MEGA BUCLE
-k <- 1
 
-  inicio_key <- paste0("ncol_iter", k, "_inicio")
-  fin_key <- paste0("ncol_iter", k, "_fin")
+  inicio_key <- paste0("ncol_iter", 0, "_inicio")
+  fin_key <- paste0("ncol_iter", 0, "_fin")
   envg$OUTPUT$Creacionismo[[inicio_key]] <- ncol(dataset)
   CanaritosExtincionistas(
       canaritos_ratio = 0.2,
       canaritos_desvios = envg$PARAM$Creacionismo$canaritos_desvios,
       canaritos_semilla = envg$PARAM$Creacionismo$semilla,
-      GVEZ = k
+      GVEZ = 0
   )
 
   envg$OUTPUT$Creacionismo[[fin_key]] <- ncol(dataset)
