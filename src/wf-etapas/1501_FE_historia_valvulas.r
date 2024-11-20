@@ -251,7 +251,7 @@ if (envg$PARAM$lag1) {
     
     # Validar si la conversión resultó en valores NA
     if (any(is.na(base_col)) || any(is.na(lag1_col))) {
-      stop(paste("No se puede calcular el delta: la columna", vcol, "o su lag contiene valores inválidos."))
+     cat(paste("No se puede calcular el delta: la columna", vcol, "o su lag contiene valores inválidos."))
     }
     
     # Calcular el delta
@@ -297,7 +297,7 @@ if (envg$PARAM$lag2) {
     
     # Validar si la conversión resultó en valores NA
     if (any(is.na(base_col)) || any(is.na(lag2_col))) {
-      stop(paste("No se puede calcular el delta: la columna", vcol, "o su lag2 contiene valores inválidos."))
+      cat(paste("No se puede calcular el delta: la columna", vcol, "o su lag2 contiene valores inválidos."))
     }
     
     # Calcular el delta de lag2
