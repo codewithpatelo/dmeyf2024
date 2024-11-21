@@ -470,7 +470,7 @@ wf_junio_variables_evolutivas_prep_iter_20 <- function( pnombrewf )
     datos_por_hoja= 1000,
     mtry_ratio= 0.2
   )
-qw
+
   # Incluye Canarito al inicio y final de cada iter
   FEev_Creacionismo(
     k=20, 
