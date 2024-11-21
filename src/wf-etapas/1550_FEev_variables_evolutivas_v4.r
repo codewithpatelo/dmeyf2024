@@ -366,7 +366,7 @@ for (k in 1:num_generaciones) {
   Creacionismo_Nueva_Generacion(variables_importantes=variables_importantes, operador="+", k=k)
   Creacionismo_Nueva_Generacion(variables_importantes=variables_importantes, operador="*", k=k)
   Creacionismo_Nueva_Generacion(variables_importantes=variables_importantes, operador="/", k=k)
-  Creacionismo_Nueva_Generacion(variables_importantes=variables_importantes, operador="-", k=k)
+  Creacionismo_Nueva_Generacion(variables_importantes=variables_importantes, operador="-", k=k) #la v3 no incluia esto
 
   # valvula de seguridad para evitar valores NaN  que es 0/0
   # paso los NaN a 0 , decision polemica si las hay
@@ -423,6 +423,7 @@ for (k in 1:num_generaciones) {
           by = eval(envg$PARAM$dataset_metadata$entity_id),
           .SDcols = cols_lagueables]
 
+ #la v3 no hacia lags ni delta lags
   # Agregar los delta lags de orden 1 con validación
   for (vcol in cols_lagueables) {
     # Verificar que las columnas son numéricas
@@ -501,6 +502,7 @@ if (envg$PARAM$lag2) {
   cat("Fin lag2\n")
 }
 
+  # la v3 no incluia RF
   AgregaVarRandomForest(GVEZ=k)
 
 
