@@ -17,6 +17,9 @@ require("lightgbm", quietly=TRUE)
 # FUNCIONES CREACIONISMO
 #------------------------------------------------------------------------------
 
+## !IMPORTANTE : PARA EL EXPERIMENTO COLABORATIVO SE USO LA V3
+## LA VER3 TIENE MENOS FUNCIONALIDADES (SIN HISTORICO NI ARBOLITOS)
+
 Creacionismo_Nueva_Generacion <- function (variables_importantes, operador, k) {
   l=1
   for (i in 1:length(variables_importantes)) {
