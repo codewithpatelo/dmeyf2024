@@ -18,7 +18,7 @@ envg$EXPENV$repo_dir <- "~/dmeyf2024/"
 envg$EXPENV$datasets_dir <- "~/buckets/b1/datasets/"
 envg$EXPENV$messenger <- "~/install/zulip_enviar.sh"
 
-envg$EXPENV$semilla_primigenia <- 111667
+envg$EXPENV$semilla_primigenia <- 102191
 
 # leo el unico parametro del script
 args <- commandArgs(trailingOnly=TRUE)
@@ -99,7 +99,7 @@ FEintra_manual_base <- function( pinputexps )
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/z1301_FE_intrames_manual.r"
+  param_local$meta$script <- "/src/wf-etapas/z1301_FE_intrames_manual_creacionismo.r"
 
   param_local$semilla <- NULL  # no usa semilla, es deterministico
 
@@ -132,7 +132,7 @@ FEhist_base <- function( pinputexps)
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/z1501_FE_historia.r"
+  param_local$meta$script <- "/src/wf-etapas/z1501_FE_historia_valvulas.r"
 
   param_local$lag1 <- TRUE
   param_local$lag2 <- TRUE # no me engraso con los lags de orden 2
@@ -144,7 +144,7 @@ FEhist_base <- function( pinputexps)
   param_local$Tendencias1$tendencia <- TRUE
   param_local$Tendencias1$minimo <- FALSE
   param_local$Tendencias1$maximo <- FALSE
-  param_local$Tendencias1$promedio <- TRUE
+  param_local$Tendencias1$promedio <- FALSE
   param_local$Tendencias1$ratioavg <- FALSE
   param_local$Tendencias1$ratiomax <- FALSE
 
@@ -154,7 +154,7 @@ FEhist_base <- function( pinputexps)
   param_local$Tendencias2$tendencia <- FALSE
   param_local$Tendencias2$minimo <- FALSE
   param_local$Tendencias2$maximo <- FALSE
-  param_local$Tendencias2$promedio <- TRUE
+  param_local$Tendencias2$promedio <- FALSE
   param_local$Tendencias2$ratioavg <- FALSE
   param_local$Tendencias2$ratiomax <- FALSE
 
@@ -226,28 +226,69 @@ FErf_attributes_base <- function( pinputexps,
 
   return( exp_correr_script( param_local ) ) # linea fija
 }
-#------------------------------------------------------------------------------
-# Creacionismo
-#  azaroso, utiliza semilla
 
-FEev_Creacionismo <- function( pinputexps, num_ext, num_crea, k, prob_cruza, prob_mutacion, tasa_aprendizaje_atributo, tasa_aprendizaje_poblacion, canaritos_desvio)
+FEev_Creacionismo <- function( pinputexps, k, canaritos_desvio)
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
   
   
   param_local$meta$script <- "/src/wf-etapas/1550_FEev_variables_evolutivas_v3.r"
+
+  
+  param_local$lag1 <- TRUE
+  param_local$lag2 <- TRUE # no me engraso con los lags de orden 2
   
   # Parametros de un LightGBM que se genera para estimar la column importance
   param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
   param_local$train$positivos <- c( "BAJA+2")
-  param_local$train$training <- c( 202101, 202102, 202103)
+  param_local$train$training <- c( 202011, 202012, 202101, 202102, 202103)
   param_local$train$validation <- c( 202105 )
   param_local$train$undersampling <- 0.1
   param_local$train$gan1 <- 273000
   param_local$train$gan0 <-  -7000
+
+  # parametros para que LightGBM se comporte como Random Forest
+  param_local$lgb_param <- list(
+    # parametros que se pueden cambiar
+    num_iterations = 25,
+    num_leaves  = 16,
+    min_data_in_leaf = 1000,
+    feature_fraction_bynode  = 0.2,
+
+    # para que LightGBM emule Random Forest
+    boosting = "rf",
+    bagging_fraction = ( 1.0 - 1.0/exp(1.0) ),
+    bagging_freq = 1.0,
+    feature_fraction = 1.0,
+
+    # genericos de LightGBM
+    max_bin = 31L,
+    objective = "binary",
+    first_metric_only = TRUE,
+    boost_from_average = TRUE,
+    feature_pre_filter = FALSE,
+    force_row_wise = TRUE,
+    verbosity = -100,
+    max_depth = -1L,
+    min_gain_to_split = 0.0,
+    min_sum_hessian_in_leaf = 0.001,
+    lambda_l1 = 0.0,
+    lambda_l2 = 0.0,
+
+    pos_bagging_fraction = 1.0,
+    neg_bagging_fraction = 1.0,
+    is_unbalance = FALSE,
+    scale_pos_weight = 1.0,
+
+    drop_rate = 0.1,
+    max_drop = 50,
+    skip_drop = 0.5,
+
+    extra_trees = FALSE
+  )
   
   param_local$Creacionismo$k <- k # Cantidad de generaciones
-  param_local$Creacionismo$canaritos_ratio <- 0.2 # Parametro de canaritos
+  param_local$Creacionismo$canaritos_ratio <- 1 # Parametro de canaritos
   param_local$Creacionismo$canaritos_desvios <- canaritos_desvio # Parametro para la poda, debe ser negativo. Idealmente entre 0 y -2
   param_local$Creacionismo$canaritos_inicio <- TRUE
 
@@ -452,7 +493,7 @@ EV_evaluate_conclase_gan <- function( pinputexps )
 # Este es el  Workflow Baseline
 # Que predice 202106 donde SI hay clase completa
 
-wf_junio_variables_evolutivas_prep_iter_20 <- function( pnombrewf )
+wf_junio <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea workflow inicial fija
 
@@ -465,38 +506,27 @@ wf_junio_variables_evolutivas_prep_iter_20 <- function( pnombrewf )
   DR_drifting_base(metodo="rank_cero_fijo")
   FEhist_base()
 
-  FErf_attributes_base( arbolitos= 20,
+  FErf_attributes_base( arbolitos= 25,
     hojas_por_arbol= 16,
     datos_por_hoja= 1000,
     mtry_ratio= 0.2
   )
-qw
-  # Incluye Canarito al inicio y final de cada iter
+
   FEev_Creacionismo(
-    k=20, 
-    canaritos_desvio=2
+    k=50, 
+    canaritos_desvio=0
   )
 
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=2.0)
-
-  FEhist_base()
-
-  FErf_attributes_base( arbolitos= 20,
-    hojas_por_arbol= 16,
-    datos_por_hoja= 1000,
-    mtry_ratio= 0.2
-  )
-
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=2.0)
+  #CN_canaritos_asesinos_base(ratio=0.2, desvio=4.0)
 
   # Etapas modelado
-  ts6 <- TS_strategy_base6()
-  ht <- HT_tuning_base( bo_iteraciones = 42 )  # iteraciones inteligentes
+  #ts6 <- TS_strategy_base6()
+  #ht <- HT_tuning_base( bo_iteraciones = 40 )  # iteraciones inteligentes
 
   # Etapas finales
-  fm <- FM_final_models_lightgbm( c(ht, ts6), ranks=c(1), qsemillas=20 )
-  SC_scoring( c(fm, ts6) )
-  EV_evaluate_conclase_gan() # evaluacion contra mes CON clase
+  #fm <- FM_final_models_lightgbm( c(ht, ts6), ranks=c(1), qsemillas=5 )
+  #SC_scoring( c(fm, ts6) )
+  #EV_evaluate_conclase_gan() # evaluacion contra mes CON clase
 
   return( exp_wf_end() ) # linea workflow final fija
 }
@@ -505,5 +535,5 @@ qw
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202106
-wf_junio_variables_evolutivas_prep_iter_20()
+wf_junio()
 
