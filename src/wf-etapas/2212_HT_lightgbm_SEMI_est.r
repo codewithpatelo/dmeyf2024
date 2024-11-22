@@ -652,7 +652,7 @@ cat( "creacion dtrain\n")
 dtrain <- lgb.Dataset(
   data = data.matrix(dataset[fold_train == 1, campos_buenos, with = FALSE]),
   label = dataset[fold_train == 1, clase01],
-  weight = dataset[, pesos],
+  weight = dataset[fold_train == 1, pesos],
   free_raw_data = FALSE
 )
 
@@ -672,7 +672,7 @@ if (dataset[fold_train == 0 & fold_test == 0 & fold_validate == 1, .N] > 0) {
   dvalidate <- lgb.Dataset(
     data = data.matrix(dataset[fold_validate == 1, campos_buenos, with = FALSE]),
     label = dataset[fold_validate == 1, clase01],
-    weight = dataset[, pesos],
+    weight = dataset[fold_validate == 1, pesos],
     free_raw_data = FALSE
   )
 
