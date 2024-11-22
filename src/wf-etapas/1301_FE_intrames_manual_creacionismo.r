@@ -211,8 +211,12 @@ AgregarVariables_IntraMes <- function(dataset) {
   # Aqui debe usted agregar sus propias nuevas variables
   # Crear la variable mpasivos_margen_lag1 como un lag de orden 1 de mpasivos_margen
   dataset[, mpasivos_margen_lag1 := shift(mpasivos_margen, n = 1, type = "lag")]
-  
 
+  
+  # Supervariable Creacionista de Generación 1
+  dataset[, fem_iter_1_625 := rowSums(cbind(ctrx_quarter_normalizado, ctarjeta_visa_transacciones), na.rm = TRUE)]
+
+  # Supervariables Creacionistas de Ordenes Superiores (GEN > 1)
   dataset[, fem_iter_5_var_622 := (
   ((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * 
   ((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo)) +
@@ -225,67 +229,67 @@ AgregarVariables_IntraMes <- function(dataset) {
    ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen)))
 )]
 
-dataset[, fem_iter_5_var_640 := 
-  ((((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo)) * ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo))) +
-   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
-  ((((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * ((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo))) +
-   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
-]
+#dataset[, fem_iter_5_var_640 := 
+#  ((((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo)) * ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo))) +
+#   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
+#  ((((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * ((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo))) +
+#   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
+#]
 
-dataset[, fem_iter_5_var_693 := 
-  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) * ((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo))) +
-   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
-  ((((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo)) * ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo))) +
-   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
-]
+#dataset[, fem_iter_5_var_693 := 
+#  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) * ((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo))) +
+#   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
+#  ((((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo)) * ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo))) +
+#   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
+#]
 
-dataset[, fem_iter_5_var_779 := (
-  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen)))) +
-  ((((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)))
-)]
+#dataset[, fem_iter_5_var_779 := (
+#  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen)))) +
+#  ((((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)))
+#)]
 
-dataset[, fem_iter_5_var_691 := 
-  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
-   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
-  ((((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
-   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
-]
+#dataset[, fem_iter_5_var_691 := 
+#  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
+#   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
+#  ((((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
+#   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
+#]
 
-dataset[, fem_iter_5_var_615 := 
-  ((((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen))) +
-  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
-   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
-]
+#dataset[, fem_iter_5_var_615 := 
+#  ((((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen))) +
+#  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
+#   (((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
+#]
 
-dataset[, fem_iter_5_var_614 := 
-  ((((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen))) +
-  ((((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
-   (((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo))))
-]
+#dataset[, fem_iter_5_var_614 := 
+#  ((((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo)) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen))) +
+#  ((((mpayroll + mtarjeta_visa_consumo) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual)) +
+#   (((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * ((ctrx_quarter + mpayroll) + mtarjeta_master_consumo))))
+#]
 
-dataset[, fem_iter_5_var_722 := 
-  ((((mcaja_ahorro + mprestamos_personales) * (mpayroll + Visa_mpagominimo)) * cproductos) +
-   (((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * (mcuenta_debitos_automaticos + (mpayroll + Visa_mpagominimo))) +
-  ((((ctrx_quarter + mpayroll) + mtarjeta_master_consumo) * ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo))) +
-   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
-]
+#dataset[, fem_iter_5_var_722 := 
+#  ((((mcaja_ahorro + mprestamos_personales) * (mpayroll + Visa_mpagominimo)) * cproductos) +
+#   (((mprestamos_personales + mcuentas_saldo) + (mpayroll * ctarjeta_visa_transacciones)) * (mcuenta_debitos_automaticos + (mpayroll + Visa_mpagominimo))) +
+#  ((((ctrx_quarter + mpayroll) + mtarjeta_master_consumo) * ((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo))) +
+#   (((ctrx_quarter + mpayroll) * (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
+#]
 
-dataset[, fem_iter_5_var_751 := 
-  ((((mcaja_ahorro + mprestamos_personales) * (mpayroll + Visa_mpagominimo)) * cproductos) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) * (mcuenta_debitos_automaticos + (mpayroll + Visa_mpagominimo))) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen) + mtarjeta_master_consumo)))
-]
+#dataset[, fem_iter_5_var_751 := 
+#  ((((mcaja_ahorro + mprestamos_personales) * (mpayroll + Visa_mpagominimo)) * cproductos) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) * (mcuenta_debitos_automaticos + (mpayroll + Visa_mpagominimo))) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen) + mtarjeta_master_consumo)))
+#]
 
-dataset[, fem_iter_5_var_778 := 
-  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen))) +
-  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)) +
-   (((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
-]
+#dataset[, fem_iter_5_var_778 := 
+#  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mprestamos_personales + mcuentas_saldo)) + ((ctrx_quarter + mpayroll) * (mtarjeta_visa_consumo + mpasivos_margen))) +
+#  ((((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + ((mtarjeta_visa_consumo + mpasivos_margen_lag1) + mcuenta_debitos_automaticos)) +
+#   (((mpayroll + mtarjeta_visa_consumo) + (mcaja_ahorro + mprestamos_personales)) + (ctrx_quarter * mrentabilidad_annual))))
+#]
 
 #
 #dataset[, fem_iter_3_var_341 := 

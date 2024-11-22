@@ -297,51 +297,31 @@ HT_tuning_base <- function( pinputexps, bo_iteraciones, bypass=FALSE)
   param_local$meta$script <- "/src/wf-etapas/2201_HT_xgboost_gan.r"
 
   # En caso que se haga cross validation, se usa esta cantidad de folds
-  param_local$lgb_crossvalidation_folds <- 5
+  param_local$xgb_crossvalidation_folds <- 5
 
   param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
   param_local$train$positivos <- c( "BAJA+2")
   param_local$train$gan1 <- 273000
   param_local$train$gan0 <-  -7000
   param_local$train$meseta <- 2001
-
-  # Hiperparametros  del LightGBM
-  #  los que tienen un solo valor son los que van fijos
-  #  los que tienen un vector,  son los que participan de la Bayesian Optimization
-
-  param_local$lgb_param <- list(
-    boosting = "gbdt", # puede ir  dart  , ni pruebe random_forest
-    objective = "binary",
-    metric = "custom",
-    first_metric_only = TRUE,
-    boost_from_average = TRUE,
-    feature_pre_filter = FALSE,
-    force_row_wise = TRUE, # para reducir warnings
-    verbosity = -100,
-    max_depth = -1L, # -1 significa no limitar,  por ahora lo dejo fijo
-    min_gain_to_split = 0.0, # min_gain_to_split >= 0.0
-    min_sum_hessian_in_leaf = 0.001, #  min_sum_hessian_in_leaf >= 0.0
-    lambda_l1 = 0.0, # lambda_l1 >= 0.0
-    lambda_l2 = 0.0, # lambda_l2 >= 0.0
-    max_bin = 31L, # lo debo dejar fijo, no participa de la BO
-    num_iterations = 9999, # un numero muy grande, lo limita early_stopping_rounds
-
-    bagging_fraction = 1.0, # 0.0 < bagging_fraction <= 1.0
-    pos_bagging_fraction = 1.0, # 0.0 < pos_bagging_fraction <= 1.0
-    neg_bagging_fraction = 1.0, # 0.0 < neg_bagging_fraction <= 1.0
-    is_unbalance = FALSE, #
-    scale_pos_weight = 1.0, # scale_pos_weight > 0.0
-
-    drop_rate = 0.1, # 0.0 < neg_bagging_fraction <= 1.0
-    max_drop = 50, # <=0 means no limit
-    skip_drop = 0.5, # 0.0 <= skip_drop <= 1.0
-
-    extra_trees = FALSE,
-    # Parte variable
-    learning_rate = c( 0.02, 0.3 ),
-    feature_fraction = c( 0.5, 0.9 ),
-    num_leaves = c( 8L, 2048L,  "integer" ),
-    min_data_in_leaf = c( 100L, 10000L, "integer" )
+  
+  # Hiperparámetros de XGBoost
+  # Los que tienen un solo valor son fijos, los que tienen un vector participan en la optimización bayesiana
+  param_local$xgb_param <- list(
+    booster = "gbtree", # Tipo de modelo
+    objective = "binary:logistic", # Clasificación binaria
+    eta = c(0.02, 0.3), # Learning rate
+    max_depth = c(3L, 10L, "integer"), # Profundidad máxima de los árboles
+    min_child_weight = c(1L, 10L, "integer"), # Peso mínimo de sumas de gradientes en hojas
+    subsample = c(0.5, 0.9), # Fracción de muestras usadas para entrenar
+    colsample_bytree = c(0.5, 0.9), # Fracción de características usadas por árbol
+    gamma = c(0, 5), # Ganancia mínima para dividir un nodo
+    lambda = c(0, 1), # Regularización L2
+    alpha = c(0, 1), # Regularización L1
+    scale_pos_weight = 1.0, # Manejo de desbalance
+    max_bin = 256L, # Máximo número de bins para características continuas
+    tree_method = "hist", # Método para construir los árboles
+    num_round = 9999 # Número de iteraciones grandes, limitado por early_stopping_rounds
   )
 
 
@@ -440,7 +420,7 @@ wf_agosto_competencia2_final <- function( pnombrewf )
 
   # Etapas modelado
   ts8 <- TS_strategy_base8()
-  ht <- HT_tuning_base( bo_iteraciones = 42 )  # iteraciones inteligentes
+  ht <- HT_tuning_base( bo_iteraciones = 40 )  # iteraciones inteligentes
 
   # Etapas finales
   fm <- FM_final_models_xgboost( c(ht, ts8), ranks=c(1), qsemillas=7 )
