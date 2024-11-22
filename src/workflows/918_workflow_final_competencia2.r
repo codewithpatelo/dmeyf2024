@@ -260,7 +260,7 @@ CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
 #   y solo incluyo en el dataset al 20% de los CONTINUA
 #  azaroso, utiliza semilla
 
-TS_strategy_base8 <- function( pinputexps )
+TS_strategy_base8_estacional <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
@@ -290,7 +290,7 @@ TS_strategy_base8 <- function( pinputexps )
 #  azaroso, utiliza semilla
 #  puede llegar a recibir  bypass, que por default esta en false
 
-HT_tuning_base <- function( pinputexps, bo_iteraciones, bypass=FALSE)
+HT_tuning_base_xgb <- function( pinputexps, bo_iteraciones, bypass=FALSE)
 {
   if( -1 == (param_local <- exp_init(pbypass=bypass))$resultado ) return( 0 ) # linea fija bypass
 
@@ -334,7 +334,7 @@ HT_tuning_base <- function( pinputexps, bo_iteraciones, bypass=FALSE)
 # proceso FM_final_models_base  Baseline
 #  azaroso, utiliza semilla
 
-FM_final_models_lightgbm <- function( pinputexps, ranks, qsemillas )
+FM_final_models_xgboost <- function( pinputexps, ranks, qsemillas )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
@@ -359,7 +359,7 @@ FM_final_models_lightgbm <- function( pinputexps, ranks, qsemillas )
 # proceso ZZ_final  Baseline
 # deterministico, SIN random
 
-SC_scoring <- function( pinputexps )
+SC_scoring_xgb <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
@@ -403,6 +403,7 @@ wf_agosto_competencia2_final <- function( pnombrewf )
 
   # Etapa especificacion dataset de la Segunda Competencia Kaggle
   DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
+  #DT_eliminar_bajas1()
 
   # Etapas preprocesamiento
   CA_catastrophe_base( metodo="MachineLearning")
@@ -419,12 +420,12 @@ wf_agosto_competencia2_final <- function( pnombrewf )
   CN_canaritos_asesinos_base(ratio=1, desvio=0)
 
   # Etapas modelado
-  ts8 <- TS_strategy_base8()
-  ht <- HT_tuning_base( bo_iteraciones = 40 )  # iteraciones inteligentes
+  ts8 <- TS_strategy_base8_estacional()
+  ht <- HT_tuning_base_xgb( bo_iteraciones = 40 )  # iteraciones inteligentes
 
   # Etapas finales
   fm <- FM_final_models_xgboost( c(ht, ts8), ranks=c(1), qsemillas=7 )
-  SC_scoring( c(fm, ts8) )
+  SC_scoring_xgb( c(fm, ts8) )
   KA_evaluate_kaggle()  # genera archivos para Kaggle
 
   return( exp_wf_end() ) # linea workflow final fija
