@@ -1,4 +1,4 @@
-cat( "ETAPA  z1551_FEev_variables_evolutivas_v3.r  INIT\n")
+cat( "ETAPA  z1551_FEev_variables_evolutivas_v5.r  INIT\n")
 
 # limpio la memoria
 rm(list = ls(all.names = TRUE)) # remove all objects
@@ -293,7 +293,7 @@ AgregaVarRandomForest <- function(GVEZ) {
 #------------------------------------------------------------------------------
 # Empieza Programa
 #------------------------------------------------------------------------------
-cat( "ETAPA  z1550_FE_variables_evolutivas_v3.r  START\n")
+cat( "ETAPA  z1550_FE_variables_evolutivas_v5.r  START\n")
 action_inicializar() 
 
 num_generaciones <- envg$PARAM$Creacionismo$k
@@ -346,7 +346,7 @@ setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
   fin_key <- paste0("ncol_iter", 0, "_fin")
   envg$OUTPUT$Creacionismo[[inicio_key]] <- ncol(dataset)
   CanaritosExtincionistas(
-      canaritos_ratio = 0.2,
+      canaritos_ratio = envg$PARAM$Creacionismo$canaritos_ratio,
       canaritos_desvios = envg$PARAM$Creacionismo$canaritos_desvios,
       canaritos_semilla = envg$PARAM$Creacionismo$semilla,
       GVEZ = 0
@@ -417,96 +417,100 @@ for (k in 1:num_generaciones) {
  cat( "ordenado del dataset\n")
  setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
 
- if (envg$PARAM$lag1) {
-  cat("Inicio lag1\n")
-  
-  # Crear los campos lags de orden 1
-  envg$OUTPUT$lag1$ncol_antes <- ncol(dataset)
-  dataset[, paste0(cols_lagueables, "_lag1") := shift(.SD, 1, NA, "lag"),
-          by = eval(envg$PARAM$dataset_metadata$entity_id),
-          .SDcols = cols_lagueables]
+ if (envg$Creacionismo$fehist) {
+  if (envg$PARAM$lag1) {
+    cat("Inicio lag1\n")
+    
+    # Crear los campos lags de orden 1
+    envg$OUTPUT$lag1$ncol_antes <- ncol(dataset)
+    dataset[, paste0(cols_lagueables, "_lag1") := shift(.SD, 1, NA, "lag"),
+            by = eval(envg$PARAM$dataset_metadata$entity_id),
+            .SDcols = cols_lagueables]
 
- #la v3 no hacia lags ni delta lags
-  # Agregar los delta lags de orden 1 con validación
-  for (vcol in cols_lagueables) {
-    # Verificar que las columnas son numéricas
-    base_col <- dataset[[vcol]]
-    lag1_col <- dataset[[paste0(vcol, "_lag1")]]
-    
-    if (!is.numeric(base_col)) {
-      warning(paste("La columna", vcol, "no es numérica. Intentando convertirla."))
-      base_col <- suppressWarnings(as.numeric(base_col))
-      dataset[[vcol]] <- base_col  # Actualizar la columna original
+  #la v3 no hacia lags ni delta lags
+    # Agregar los delta lags de orden 1 con validación
+    for (vcol in cols_lagueables) {
+      # Verificar que las columnas son numéricas
+      base_col <- dataset[[vcol]]
+      lag1_col <- dataset[[paste0(vcol, "_lag1")]]
+      
+      if (!is.numeric(base_col)) {
+        warning(paste("La columna", vcol, "no es numérica. Intentando convertirla."))
+        base_col <- suppressWarnings(as.numeric(base_col))
+        dataset[[vcol]] <- base_col  # Actualizar la columna original
+      }
+      
+      if (!is.numeric(lag1_col)) {
+        warning(paste("La columna", paste0(vcol, "_lag1"), "no es numérica. Intentando convertirla."))
+        lag1_col <- suppressWarnings(as.numeric(lag1_col))
+        dataset[[paste0(vcol, "_lag1")]] <- lag1_col  # Actualizar la columna lag1
+      }
+      
+      # Validar si la conversión resultó en valores NA
+      if (any(is.na(base_col)) || any(is.na(lag1_col))) {
+      cat(paste("No se puede calcular el delta: la columna", vcol, "o su lag contiene valores inválidos."))
+      }
+      
+      # Calcular el delta
+      dataset[, paste0(vcol, "_delta1") := base_col - lag1_col]
     }
     
-    if (!is.numeric(lag1_col)) {
-      warning(paste("La columna", paste0(vcol, "_lag1"), "no es numérica. Intentando convertirla."))
-      lag1_col <- suppressWarnings(as.numeric(lag1_col))
-      dataset[[paste0(vcol, "_lag1")]] <- lag1_col  # Actualizar la columna lag1
-    }
-    
-    # Validar si la conversión resultó en valores NA
-    if (any(is.na(base_col)) || any(is.na(lag1_col))) {
-     cat(paste("No se puede calcular el delta: la columna", vcol, "o su lag contiene valores inválidos."))
-    }
-    
-    # Calcular el delta
-    dataset[, paste0(vcol, "_delta1") := base_col - lag1_col]
+    envg$OUTPUT$lag1$ncol_despues <- ncol(dataset)
+    GrabarOutput()
+    cat("Fin lag1\n")
   }
-  
-  envg$OUTPUT$lag1$ncol_despues <- ncol(dataset)
-  GrabarOutput()
-  cat("Fin lag1\n")
-}
 
 
 
-# Asegurar que las columnas de lag son válidas
-cols_lagueables <- intersect(cols_lagueables, colnames(dataset))
+  # Asegurar que las columnas de lag son válidas
+  cols_lagueables <- intersect(cols_lagueables, colnames(dataset))
 
-if (envg$PARAM$lag2) {
-  cat("Inicio lag2\n")
-  
-  # Crear los campos lags de orden 2
-  envg$OUTPUT$lag2$ncol_antes <- ncol(dataset)
-  dataset[, paste0(cols_lagueables, "_lag2") := shift(.SD, 2, NA, "lag"),
-          by = eval(envg$PARAM$dataset_metadata$entity_id),
-          .SDcols = cols_lagueables]
-  
-  # Agregar los delta lags de orden 2 con validación
-  for (vcol in cols_lagueables) {
-    # Validar las columnas originales y lag2
-    base_col <- dataset[[vcol]]
-    lag2_col <- dataset[[paste0(vcol, "_lag2")]]
+  if (envg$PARAM$lag2) {
+    cat("Inicio lag2\n")
     
-    if (!is.numeric(base_col)) {
-      warning(paste("La columna", vcol, "no es numérica. Intentando convertirla."))
-      base_col <- suppressWarnings(as.numeric(base_col))
-      dataset[[vcol]] <- base_col  # Actualizar la columna original
+    # Crear los campos lags de orden 2
+    envg$OUTPUT$lag2$ncol_antes <- ncol(dataset)
+    dataset[, paste0(cols_lagueables, "_lag2") := shift(.SD, 2, NA, "lag"),
+            by = eval(envg$PARAM$dataset_metadata$entity_id),
+            .SDcols = cols_lagueables]
+    
+    # Agregar los delta lags de orden 2 con validación
+    for (vcol in cols_lagueables) {
+      # Validar las columnas originales y lag2
+      base_col <- dataset[[vcol]]
+      lag2_col <- dataset[[paste0(vcol, "_lag2")]]
+      
+      if (!is.numeric(base_col)) {
+        warning(paste("La columna", vcol, "no es numérica. Intentando convertirla."))
+        base_col <- suppressWarnings(as.numeric(base_col))
+        dataset[[vcol]] <- base_col  # Actualizar la columna original
+      }
+      
+      if (!is.numeric(lag2_col)) {
+        warning(paste("La columna", paste0(vcol, "_lag2"), "no es numérica. Intentando convertirla."))
+        lag2_col <- suppressWarnings(as.numeric(lag2_col))
+        dataset[[paste0(vcol, "_lag2")]] <- lag2_col  # Actualizar la columna lag2
+      }
+      
+      # Validar si la conversión resultó en valores NA
+      if (any(is.na(base_col)) || any(is.na(lag2_col))) {
+        cat(paste("No se puede calcular el delta: la columna", vcol, "o su lag2 contiene valores inválidos."))
+      }
+      
+      # Calcular el delta de lag2
+      dataset[, paste0(vcol, "_delta2") := base_col - lag2_col]
     }
     
-    if (!is.numeric(lag2_col)) {
-      warning(paste("La columna", paste0(vcol, "_lag2"), "no es numérica. Intentando convertirla."))
-      lag2_col <- suppressWarnings(as.numeric(lag2_col))
-      dataset[[paste0(vcol, "_lag2")]] <- lag2_col  # Actualizar la columna lag2
-    }
-    
-    # Validar si la conversión resultó en valores NA
-    if (any(is.na(base_col)) || any(is.na(lag2_col))) {
-      cat(paste("No se puede calcular el delta: la columna", vcol, "o su lag2 contiene valores inválidos."))
-    }
-    
-    # Calcular el delta de lag2
-    dataset[, paste0(vcol, "_delta2") := base_col - lag2_col]
+    envg$OUTPUT$lag2$ncol_despues <- ncol(dataset)
+    GrabarOutput()
+    cat("Fin lag2\n")
   }
-  
-  envg$OUTPUT$lag2$ncol_despues <- ncol(dataset)
-  GrabarOutput()
-  cat("Fin lag2\n")
-}
+ }
 
-  # la v3 no incluia RF
-  AgregaVarRandomForest(GVEZ=k)
+  if (envg$Creacionismo$ferf) {
+    # la v3 no incluia RF
+    AgregaVarRandomForest(GVEZ=k)
+  }
 
 
 
@@ -576,4 +580,4 @@ GrabarOutput()
 
 action_finalizar( archivos = c("dataset.csv.gz","dataset_metadata.yml")) 
 
-cat( "ETAPA  z1550_FE_variables_evolutivas_v3.r  END\n")
+cat( "ETAPA  z1550_FE_variables_evolutivas_v5.r  END\n")
