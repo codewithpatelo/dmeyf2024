@@ -196,7 +196,7 @@ FErf_attributes_base <- function( pinputexps, ratio, desvio)
   # parametros para que LightGBM se comporte como Random Forest
   param_local$lgb_param <- list(
     # parametros que se pueden cambiar
-    num_iterations = 20,
+    num_iterations = 25,
     num_leaves  = 16,
     min_data_in_leaf = 1000,
     feature_fraction_bynode  = 0.2,
@@ -461,21 +461,22 @@ KA_evaluate_kaggle_semillerio <- function( pinputexps )
 # Que predice 202107 donde conozco la clase
 # y ya genera graficos
 
-wf_SEMI_ago_orden227 <- function( pnombrewf )
+wf_competencia2_final <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea fija
 
   # Etapa especificacion dataset de la Segunda Competencia Kaggle
   DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
+  DT_eliminar_bajas1()
 
   CA_catastrophe_base( metodo="MachineLearning")
-  FEintra_manual_base()
+  FEintra_manual_creacionismo()
   DR_drifting_base(metodo="rank_cero_fijo")
-  FEhist_base()
+  FEhist_valvulas()
   ultimo <- FErf_attributes_base()
-  #CN_canaritos_asesinos_base(ratio=0.2, desvio=4.0)
+  CN_canaritos_asesinos_base(ratio=1, desvio=0)
 
-  ts8 <- TS_strategy_base8()
+  ts8 <- TS_strategy_base8_estacional()
 
   # la Bayesian Optimization con el semillerio dentro
   ht <- HT_tuning_semillerio(
@@ -502,6 +503,6 @@ wf_SEMI_ago_orden227 <- function( pnombrewf )
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202108
-wf_SEMI_ago_orden227()
+wf_competencia2_final()
 
 
