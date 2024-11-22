@@ -18,7 +18,7 @@ require("lightgbm", quietly=TRUE)
 #------------------------------------------------------------------------------
 
 ## !IMPORTANTE : PARA EL EXPERIMENTO COLABORATIVO SE USO LA V3
-## LA VER3 TIENE MENOS FUNCIONALIDADES (SIN HISTORICO NI ARBOLITOS)
+## LA VER3 TIENE MENOS FUNCIONALIDADES (SIN HISTORICO NI ARBOLITOS y SIN LA OPERACION de SUBSTRACCION)
 
 Creacionismo_Nueva_Generacion <- function (variables_importantes, operador, k) {
   l=1
