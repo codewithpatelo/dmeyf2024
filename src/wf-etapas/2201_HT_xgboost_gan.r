@@ -104,13 +104,13 @@ EstimarGanancia_xgboost <- function(x) {
   vcant_optima <<- c()
   set.seed(envg$PARAM$xgb_semilla, kind = "L'Ecuyer-CMRG")
 
-  watchlist <- list(train = dtrain, eval = dvalidate)
+  evals <- list(train = dtrain, eval = dvalidate)
 
   modelo_train <- xgb.train(
     params = param_completo,
     data = dtrain,
     nrounds = envg$PARAM$xgb_nrounds,
-    watchlist = watchlist,
+    evals = evals,
     feval = fganancia_xgb_meseta,
     maximize = TRUE,
     early_stopping_rounds = param_completo$early_stopping_rounds,
