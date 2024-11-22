@@ -264,7 +264,7 @@ TS_strategy_base8_estacional <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/z2101_TS_training_strategy.r"
+  param_local$meta$script <- "/src/wf-etapas/2101_TS_training_strategy_estacional.r"
 
 
   param_local$future <- c(202108)
