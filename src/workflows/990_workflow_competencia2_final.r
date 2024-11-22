@@ -19,7 +19,7 @@ envg$EXPENV$repo_dir <- "~/dmeyf2024/"
 envg$EXPENV$datasets_dir <- "~/buckets/b1/datasets/"
 envg$EXPENV$messenger <- "~/install/zulip_enviar.sh"
 
-envg$EXPENV$semilla_primigenia <- 102191
+envg$EXPENV$semilla_primigenia <- 945799
 
 # leo el unico parametro del script
 args <- commandArgs(trailingOnly=TRUE)
@@ -81,7 +81,17 @@ DT_eliminar_bajas1 <- function( arch_dataset )
 
   param_local$meta$script <- "/src/wf-etapas/1150_DT_eliminar_bajas1.r"
 
-  param_local$EliminarBajas1$meses <- c(202009, 202010, 202011, 202012, 202101, 202102, 202103)
+  param_local$EliminarBajas1$meses <- c(
+    202104, 202103, 202102, 202101, 
+    202012, 202011, 202010, 202009, 202008, 202007, 
+    # 202006  Excluyo por variables rotas
+    202005, 202004, 202003, 202002, 202001,
+    201912, 201911,
+    # 201910 Excluyo por variables rotas
+    201909, 201908, 201907, 201906,
+    # 201905  Excluyo por variables rotas
+    #201904, 201903
+  )
 
   param_local$semilla <- NULL  # no usa semilla, es deterministico
 
@@ -109,7 +119,7 @@ CA_catastrophe_base <- function( pinputexps, metodo )
 # Feature Engineering Intra Mes   Baseline
 # deterministico, SIN random
 
-FEintra_manual_base <- function( pinputexps )
+FEintra_manual_creacionismo <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
@@ -142,7 +152,7 @@ DR_drifting_base <- function( pinputexps, metodo)
 # Feature Engineering Historico  Baseline
 # deterministico, SIN random
 
-FEhist_base <- function( pinputexps)
+FEhist_valvulas <- function( pinputexps)
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
@@ -271,7 +281,7 @@ CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
 # Atencion, el undersampling es de 0.02
 #  tanto para entrenamineto como para  Final train$clase01_valor1
 
-TS_strategy_base8 <- function( pinputexps )
+TS_strategy_est8 <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
@@ -329,7 +339,7 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
 {
   if( -1 == (param_local <- exp_init(pbypass=bypass))$resultado ) return( 0 ) # linea fija bypass
 
-  param_local$meta$script <- "/src/wf-etapas/z2212_HT_lightgbm_SEMI.r"
+  param_local$meta$script <- "/src/wf-etapas/z2212_HT_lightgbm_SEMI_est.r"
 
 
   # En caso que se haga cross validation, se usa esta cantidad de folds
@@ -400,7 +410,7 @@ FM_final_models_lightgbm_semillerio <- function( pinputexps, ranks, semillerio, 
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/z2302_FM_final_models_lightgbm_SEMI.r"
+  param_local$meta$script <- "/src/wf-etapas/z2302_FM_final_models_lightgbm_SEMI_est.r"
 
   # Que modelos quiero, segun su posicion en el ranking de la Bayesian Optimizacion, ordenado por metrica descendente
   param_local$modelos_rank <- ranks
@@ -426,7 +436,7 @@ SC_scoring_semillerio <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/z2402_SC_scoring_lightgbm_SEMI.r"
+  param_local$meta$script <- "/src/wf-etapas/z2402_SC_scoring_lightgbm_SEMI_est.r"
 
   param_local$semilla <- NULL  # no usa semilla, es deterministico
 
@@ -476,14 +486,13 @@ wf_competencia2_final <- function( pnombrewf )
   ultimo <- FErf_attributes_base()
   CN_canaritos_asesinos_base(ratio=1, desvio=0)
 
-  ts8 <- TS_strategy_base8_estacional()
+  ts8 <- TS_strategy_est8()
 
   # la Bayesian Optimization con el semillerio dentro
   ht <- HT_tuning_semillerio(
     semillerio = 50, # semillerio dentro de la Bayesian Optim
     bo_iteraciones = 10  # iteraciones inteligentes, apenas 10
   )
-
 
   fm <- FM_final_models_lightgbm_semillerio( 
     c(ht, ts8), # los inputs
