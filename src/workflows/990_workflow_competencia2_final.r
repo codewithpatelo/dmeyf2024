@@ -75,11 +75,11 @@ DT_incorporar_dataset <- function( arch_dataset )
   return( exp_correr_script( param_local ) ) # linea fija}
 }
 
-DTel_eliminar_bajas1 <- function( arch_dataset )
+DC_eliminar_bajas1 <- function( arch_dataset )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/1150_DT_eliminar_bajas1.r"
+  param_local$meta$script <- "/src/wf-etapas/1150_DC_eliminar_bajas1.r"
 
   param_local$EliminarBajas1$meses <- c(
     202104, 202103, 202102, 202101, 
@@ -477,7 +477,7 @@ wf_competencia2_final <- function( pnombrewf )
 
   # Etapa especificacion dataset de la Segunda Competencia Kaggle
   DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
-  DTel_eliminar_bajas1()
+  DC_eliminar_bajas1()
 
   CA_catastrophe_base( metodo="MachineLearning")
   FEintra_manual_creacionismo()

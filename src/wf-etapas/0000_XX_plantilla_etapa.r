@@ -48,7 +48,8 @@ param2 <- envg$PARAM$NombreEtapa$param2
 #------------------------------------------------------------------------------
 # Carga Dataset
 #------------------------------------------------------------------------------
-
+envg$PARAM$dataset <- paste0( "./", envg$PARAM$input, "/dataset.csv.gz" )
+envg$PARAM$dataset_metadata <- read_yaml( paste0( "./", envg$PARAM$input, "/dataset_metadata.yml" ) )
 cat( "lectura del dataset\n")
 action_verificar_archivo( envg$PARAM$dataset )
 cat( "Iniciando lectura del dataset\n" )
