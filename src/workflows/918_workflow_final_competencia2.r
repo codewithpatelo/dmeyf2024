@@ -276,6 +276,7 @@ TS_strategy_base8_estacional <- function( pinputexps )
   param_local$train$training <- c(202104,202103,202102,202101,202012,202011,202010,202009,20208,202007,202006,202005)
   param_local$train$validation <- c(202105)
   param_local$train$testing <- c(202106)
+  param_local$train$mes_reciente <- "2021-05-01"
 
   # Atencion  0.2  de  undersampling de la clase mayoritaria,  los CONTINUA
   # 1.0 significa NO undersampling
