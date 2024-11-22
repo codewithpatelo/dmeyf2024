@@ -533,6 +533,23 @@ if (dataset[fold_train == 0 & fold_test == 0 & fold_validate == 1, .N] > 0) {
   ]
 }
 
+# Si hay que hacer testing
+if (dataset[fold_train == 0 & fold_validate == 0 & fold_test == 1, .N] > 0) {
+  cat( "creacion testing\n")
+  ktest <- TRUE
+  campos_buenos_test <- setdiff(
+    copy(colnames(dataset)),
+    c("fold_train", "fold_validate", "fold_test")
+  )
+
+  dataset_test <- dataset[fold_test == 1, campos_buenos_test, with = FALSE]
+
+  envg$OUTPUT$test$ncol <- ncol(dataset_test)
+  envg$OUTPUT$test$nrow <- nrow(dataset_test)
+  envg$OUTPUT$test$periodos <- dataset_test[, length(unique(get(envg$PARAM$dataset_metadata$periodo)))]
+
+}
+
 # Inicializo MLFlow
 mlog_init()
 
@@ -586,7 +603,7 @@ obj.fun <- makeSingleObjectiveFunction(
   fn = funcion_optimizar, # la funcion que voy a maximizar
   minimize = FALSE, # estoy Maximizando la ganancia
   noisy = TRUE,
-  par.set = envg$PARAM$bo_lgb, # definido al comienzo del programa
+  par.set = envg$PARAM$bo_xgb, # definido al comienzo del programa
   has.simple.signature = FALSE # paso los parametros en una lista
 )
 
