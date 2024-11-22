@@ -299,7 +299,7 @@ HT_tuning_base_xgb <- function( pinputexps, bo_iteraciones, bypass=FALSE)
 
   # En caso que se haga cross validation, se usa esta cantidad de folds
   param_local$xgb_crossvalidation_folds <- 5
-  param_local$xgb_nrounds
+  param_local$xgb_nrounds <- 9999
 
   param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
   param_local$train$positivos <- c( "BAJA+2")

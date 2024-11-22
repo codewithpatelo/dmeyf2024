@@ -99,6 +99,7 @@ EstimarGanancia_xgboost <- function(x) {
 
   param_completo$early_stopping_rounds <- as.integer(400 + 4 / param_completo$eta)
 
+
   GLOBAL_arbol <<- 0L
   GLOBAL_gan_max <<- -Inf
   vcant_optima <<- c()
