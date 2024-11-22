@@ -61,7 +61,7 @@ cat( "Finalizada lectura del dataset\n" )
 cat( "ordeno_dataset\n")
 setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
 
-mes_reciente <- as.Date(envg$PARAM$TrainingStrategy$mes_reciente)  # Fecha del mes más reciente
+mes_reciente <- as.Date(envg$PARAM$train$mes_reciente)  # Fecha del mes más reciente
 dataset[, pesos := 0.95^(interval(as.Date(paste0(foto_mes, "01"), "%Y%m%d"), mes_reciente) %/% months(1))]
 
 archivos_salida <- c()
