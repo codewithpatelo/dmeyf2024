@@ -398,34 +398,33 @@ EstimarGanancia_xgbCV <- function(x) {
 }
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
-parametrizar <- function(lparam) {
-  param_fijos <- copy(lparam)  # Copiar los parámetros iniciales
-  hs <- list()  # Lista para los parámetros optimizables
+parametrizar  <- function( lparam )
+{
+  param_fijos  <- copy( lparam )
+  hs  <- list()
 
-  for (param in names(lparam)) {
-    if (length(lparam[[param]]) > 1) {
-      desde <- as.numeric(lparam[[param]][[1]])
-      hasta <- as.numeric(lparam[[param]][[2]])
+  for( param  in  names( lparam ) )
+  {
+    if( length( lparam[[ param ]] ) > 1 )
+    {
+      desde  <- as.numeric( lparam[[ param ]][[1]]  )
+      hasta  <- as.numeric( lparam[[ param ]][[2]]  )
 
-      # Determinar si es un parámetro numérico o entero
-      if (length(lparam[[param]]) == 2) {
-        hs <- append(hs, 
-                     list(makeNumericParam(param, lower = desde, upper = hasta)))
+      if( length( lparam[[ param ]] ) == 2 )
+      {
+         hs  <- append( hs,  
+                        list( makeNumericParam( param, lower= desde, upper= hasta)  ) )
       } else {
-        hs <- append(hs, 
-                     list(makeIntegerParam(param, lower = desde, upper = hasta)))
+         hs  <- append( hs, 
+                        list( makeIntegerParam( param, lower= desde, upper= hasta) ) )
       }
 
-      # Remover el parámetro de la lista de parámetros fijos
-      param_fijos[[param]] <- NULL
+      param_fijos[[ param ]] <- NULL  #lo quito 
     }
   }
 
-  # Retornar una lista con los parámetros fijos y el conjunto de hiperparámetros
-  return(list(
-    "param_fijos" = param_fijos,
-    "paramSet" = hs
-  ))
+  return( list( "param_fijos" =  param_fijos,
+                "paramSet"    =  hs ) )
 }
 #------------------------------------------------------------------------------
 
@@ -438,7 +437,8 @@ action_inicializar()
 envg$PARAM$xgb_semilla <- envg$PARAM$semilla
 
 # Apertura de los parámetros de XGBoost
-apertura <- parametrizar(envg$PARAM$xgb_param)
+apertura  <- parametrizar( envg$PARAM$xgb_param )
+envg$PARAM$lgb_basicos <- apertura$param_fijos
 envg$PARAM$xgb_basicos <- apertura$param_fijos
 envg$PARAM$bo_xgb <- makeParamSet(params = apertura$paramSet)
 
