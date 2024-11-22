@@ -75,7 +75,7 @@ DT_incorporar_dataset <- function( arch_dataset )
   return( exp_correr_script( param_local ) ) # linea fija}
 }
 
-DT_eliminar_bajas1 <- function( arch_dataset )
+DTel_eliminar_bajas1 <- function( arch_dataset )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
@@ -477,7 +477,7 @@ wf_competencia2_final <- function( pnombrewf )
 
   # Etapa especificacion dataset de la Segunda Competencia Kaggle
   DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
-  DT_eliminar_bajas1()
+  DTel_eliminar_bajas1()
 
   CA_catastrophe_base( metodo="MachineLearning")
   FEintra_manual_creacionismo()
