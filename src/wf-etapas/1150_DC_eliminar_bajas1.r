@@ -38,7 +38,10 @@ valores_foto_mes <- envg$PARAM$EliminarBajas1$meses
 # Carga Dataset
 #------------------------------------------------------------------------------
 # Paso 1: Cargar el archivo desde la dirección especificada usando fread de data.table
+envg$PARAM$dataset <- paste0( "./", envg$PARAM$input, "/dataset.csv.gz" )
+envg$PARAM$dataset_metadata <- read_yaml( paste0( "./", envg$PARAM$input, "/dataset_metadata.yml" ) )
 cat( "lectura del dataset\n")
+cat(envg$PARAM$dataset, "\n")
 action_verificar_archivo( envg$PARAM$dataset )
 cat( "Iniciando lectura del dataset\n" )
 dataset <- fread(envg$PARAM$dataset)

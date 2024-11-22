@@ -88,7 +88,7 @@ DTel_eliminar_bajas1 <- function( arch_dataset )
     202005, 202004, 202003, 202002, 202001,
     201912, 201911,
     # 201910 Excluyo por variables rotas
-    201909, 201908, 201907, 201906,
+    201909, 201908, 201907, 201906
     # 201905  Excluyo por variables rotas
     #201904, 201903
   )
@@ -298,7 +298,7 @@ TS_strategy_est8 <- function( pinputexps )
     202005, 202004, 202003, 202002, 202001,
     201912, 201911,
     # 201910 Excluyo por variables rotas
-    201909, 201908, 201907, 201906,
+    201909, 201908, 201907, 201906
     # 201905  Excluyo por variables rotas
     #201904, 201903
   )
@@ -314,7 +314,7 @@ TS_strategy_est8 <- function( pinputexps )
     202005, 202004, 202003, 202002, 202001,
     201912, 201911,
     # 201910 Excluyo por variables rotas
-    201909, 201908, 201907, 201906,
+    201909, 201908, 201907, 201906
     # 201905  Excluyo por variables rotas
     #201904, 201903
   )
@@ -339,7 +339,7 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
 {
   if( -1 == (param_local <- exp_init(pbypass=bypass))$resultado ) return( 0 ) # linea fija bypass
 
-  param_local$meta$script <- "/src/wf-etapas/z2212_HT_lightgbm_SEMI_est.r"
+  param_local$meta$script <- "/src/wf-etapas/2212_HT_lightgbm_SEMI_est.r"
 
 
   # En caso que se haga cross validation, se usa esta cantidad de folds
@@ -410,7 +410,7 @@ FM_final_models_lightgbm_semillerio <- function( pinputexps, ranks, semillerio, 
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/z2302_FM_final_models_lightgbm_SEMI_est.r"
+  param_local$meta$script <- "/src/wf-etapas/2302_FM_final_models_lightgbm_SEMI_est.r"
 
   # Que modelos quiero, segun su posicion en el ranking de la Bayesian Optimizacion, ordenado por metrica descendente
   param_local$modelos_rank <- ranks
@@ -436,7 +436,7 @@ SC_scoring_semillerio <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/z2402_SC_scoring_lightgbm_SEMI_est.r"
+  param_local$meta$script <- "/src/wf-etapas/2402_SC_scoring_lightgbm_SEMI_est.r"
 
   param_local$semilla <- NULL  # no usa semilla, es deterministico
 
