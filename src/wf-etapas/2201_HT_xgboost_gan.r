@@ -552,24 +552,62 @@ mlog_addfile("BO_log.txt",
 rm(dataset)
 gc(verbose = FALSE)
 
-# Configuración de la optimización bayesiana con XGBoost
+# si ya existe el archivo log, traigo hasta donde procese
+if (file.exists("BO_log.txt")) {
+  tabla_log <- fread("BO_log.txt")
+  GLOBAL_iteracion <- nrow(tabla_log)
+  GLOBAL_ganancia <- tabla_log[, max(ganancia)]
+  rm(tabla_log)
+} else {
+  GLOBAL_iteracion <- 0L
+  GLOBAL_ganancia <- -Inf
+}
+
+
+# Aqui comienza la configuracion de mlrMBO
+
+
+envg$OUTPUT$crossvalidation <- kcrossvalidation
+GrabarOutput()
+
+# deobo hacer cross validation o  Train/Validate/Test
+if (kcrossvalidation) {
+  funcion_optimizar <- EstimarGanancia_xgboostCV
+} else {
+  funcion_optimizar <- EstimarGanancia_xgboost
+}
+
+
 configureMlr(show.learner.output = FALSE)
 
+# configuro la busqueda bayesiana,  los hiperparametros que se van a optimizar
+# por favor, no desesperarse por lo complejo
 obj.fun <- makeSingleObjectiveFunction(
-  fn = EstimarGanancia_xgboost,
-  minimize = FALSE,
+  fn = funcion_optimizar, # la funcion que voy a maximizar
+  minimize = FALSE, # estoy Maximizando la ganancia
   noisy = TRUE,
-  par.set = envg$PARAM$bo_xgb,
-  has.simple.signature = FALSE
+  par.set = envg$PARAM$bo_lgb, # definido al comienzo del programa
+  has.simple.signature = FALSE # paso los parametros en una lista
 )
 
+# archivo donde se graba y cada cuantos segundos
 ctrl <- makeMBOControl(
   save.on.disk.at.time = 60,
   save.file.path = "bayesiana.RDATA"
 )
 
-ctrl <- setMBOControlTermination(ctrl, iters = envg$PARAM$bo_iteraciones)
+ctrl <- setMBOControlTermination(ctrl,
+  iters = envg$PARAM$bo_iteraciones
+) # cantidad de iteraciones
+
 ctrl <- setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
+
+# establezco la funcion que busca el maximo
+surr.km <- makeLearner("regr.km",
+  predict.type = "se",
+  covtype = "matern3_2",
+  control = list(trace = TRUE)
+)
 
 surr.km <- makeLearner("regr.km",
   predict.type = "se",
@@ -580,20 +618,31 @@ surr.km <- makeLearner("regr.km",
   control = list(trace = TRUE)
 )
 
-set.seed(envg$PARAM$xgb_semilla, kind = "L'Ecuyer-CMRG")
+
+# Aqui inicio la optimizacion bayesiana
+set.seed(envg$PARAM$lgb_semilla, kind = "L'Ecuyer-CMRG")
 if (!file.exists("bayesiana.RDATA")) {
   run <- mbo(obj.fun, learner = surr.km, control = ctrl)
 } else {
-  run <- mboContinue("bayesiana.RDATA")
+  # si ya existe el archivo RDATA,
+  # debo continuar desde el punto hasta donde llegue
+  #  usado para cuando se corta la virtual machine
+  run <- mboContinue("bayesiana.RDATA") # retomo en caso que ya exista
 }
 
+#------------------------------------------------------------------------------
 BO_log <- fread("BO_log.txt")
 envg$OUTPUT$ganancia_max <- BO_log[, max(ganancia, na.rm = TRUE)]
 
 envg$OUTPUT$time$end <- format(Sys.time(), "%Y%m%d %H%M%S")
 GrabarOutput()
-
-file.remove("z-Rcanresume.txt")
-action_finalizar(archivos = c("BO_log.txt"))
-cat("ETAPA z2201_HT_xgboost_gan.r END\n")
 #------------------------------------------------------------------------------
+
+# ya no tiene sentido retomar, se termino el trabajo
+file.remove("z-Rcanresume.txt")
+#------------------------------------------------------------------------------
+
+# finalizo la corrida
+#  archivos tiene a los files que debo verificar existen para no abortar
+
+action_finalizar( archivos = c("BO_log.txt")) 
