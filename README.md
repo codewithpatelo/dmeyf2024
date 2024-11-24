@@ -7,7 +7,8 @@ Correr código 990_workflow_competencia2_final.r (VM 256 GB RAM 24 vCPU)
 
 
 # MODELO 2 - SEMI-CONSERVADOR C/ CANARITOS
-  DT_incorporar_dataset()
+```r
+DT_incorporar_dataset()
   #DC_eliminar_bajas1()
   CA_catastrophe_base(metodo="MachineLearning")
   FEintra_manual_creacionismo()  # Este código agrega unas pocas de las mejores variables creadas en las iteraciones del experimento creacionista
@@ -32,11 +33,11 @@ Correr código 990_workflow_competencia2_final.r (VM 256 GB RAM 24 vCPU)
 
   SC_scoring_semillerio( c(fm, ts8) )
   KA_evaluate_kaggle_semillerio()
+```
 
 ### Entrega seleccionada: 
 * KA-0002_01_051_r1_10500.csv  
   
-
 ## Como entregas probé también:
 
 # MODELO 1 - Robatuti
