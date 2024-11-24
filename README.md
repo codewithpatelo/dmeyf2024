@@ -41,7 +41,7 @@ DT_incorporar_dataset()
 ## Como entregas probé también:
 
 # MODELO 1 - Robatuti
-(Este es igual al modelo 2, pero sacaba bajas y asignaba pesos estacionales según el mejor modelo del experimento estacional). No pareció dar buenos resultados pero voy a estar seguro luego de la competencia2. Por cuestiones de tiempo usaré la competencia 2 como experimento para saber que modelo es mejor. Y en base a eso decidiré cuál podré usar en la competencia3.
+(Este es igual al modelo 2, pero sacaba bajas+1 y asignaba pesos estacionales según el mejor modelo del experimento estacional). No pareció dar buenos resultados pero voy a estar seguro luego de la competencia2. Por cuestiones de tiempo usaré la competencia 2 como experimento para saber que modelo es mejor. Y en base a eso decidiré cuál podré usar en la competencia3.
 
 ## Cosas que quedaron en el tintero o a medio camino:
 
