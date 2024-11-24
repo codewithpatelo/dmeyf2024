@@ -45,7 +45,7 @@ DT_incorporar_dataset()
 
 ## Cosas que quedaron en el tintero o a medio camino:
 
-(1) Agregar más variables creacionistas en la ingenieria de atributos manual intrames
+(1) Agregar más variables creacionistas en la ingenieria de atributos manual intrames (preferencia por ordenes inferiores)
 (2) Probar xGBoost
 (3) Probar pesos obtenidos por BO
 (4) Agregar atributos artesanales de lógica booleana o de triple valor (como neutrosofica) para indicar imputaciones de valores 
