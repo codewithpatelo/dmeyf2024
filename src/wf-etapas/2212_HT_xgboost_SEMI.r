@@ -38,8 +38,8 @@ GLOBAL_gan_max <- -Inf
 vcant_optima <- c()
 
 fganancia_xgb_meseta <- function(probs, datos) {
-  vlabels <- get_field(datos, "label")
-  vpesos <- get_field(datos, "weight")
+  vlabels <- getinfo(datos, "label")
+  vpesos <- getinfo(datos, "weight")
 
 
   GLOBAL_arbol <<- GLOBAL_arbol + 1
@@ -78,9 +78,8 @@ fganancia_xgb_meseta <- function(probs, datos) {
 
 
   return(list(
-    "name" = "ganancia",
-    "value" = gan,
-    "higher_better" = TRUE
+    "metric_name" = "ganancia",
+    "metric_value" = gan
   ))
 }
 #------------------------------------------------------------------------------
@@ -200,6 +199,7 @@ EstimarGanancia_xgboost <- function(x) {
       modelo_local <- xgb.train(
         data = dtrain,
         param = param_ganador,
+        nrounds = param_ganador$nrounds,
         verbose = 0
       )
 
@@ -353,8 +353,8 @@ EstimarGanancia_xgboost <- function(x) {
 vcant_optima <- c()
 
 fganancia_xgb_mesetaCV <- function(probs, datos) {
-  vlabels <- get_field(datos, "label")
-  vpesos <- get_field(datos, "weight")
+  vlabels <- getinfo(datos, "label")
+  vpesos <- getinfo(datos, "weight")
 
   GLOBAL_arbol <<- GLOBAL_arbol + 1L
 
@@ -390,9 +390,8 @@ fganancia_xgb_mesetaCV <- function(probs, datos) {
   }
 
   return(list(
-    "name" = "ganancia",
-    "value" = gan,
-    "higher_better" = TRUE
+    "metric_name" = "ganancia",
+    "metric_value" = gan,
   ))
 }
 #------------------------------------------------------------------------------
@@ -455,6 +454,7 @@ EstimarGanancia_xgboostCV <- function(x) {
     modelo <- xgb.train(
       data = dtrain,
       param = param_completo,
+      nrounds = param_completo$nrounds,
       verbose = 0
     )
 
@@ -501,6 +501,7 @@ EstimarGanancia_xgboostCV <- function(x) {
     modelo <- xgb.train(
       data = dtrain,
       param = param_impo,
+      nrounds = param_impo$nrounds,
       verbose = 0
     )
 
@@ -705,14 +706,14 @@ if (dataset[fold_train == 0 & fold_validate == 0 & fold_test == 1, .N] > 0) {
   )
 
   # Filtrado del conjunto de test
-  dataset_test_dt <- dataset[fold_test == 1, campos_buenos_test, with = FALSE]
+  dataset_test <- dataset[fold_test == 1, campos_buenos_test, with = FALSE]
 
-  envg$OUTPUT$test$ncol <- ncol(dataset_test_dt)
-  envg$OUTPUT$test$nrow <- nrow(dataset_test_dt)
-  envg$OUTPUT$test$periodos <- dataset_test_dt[, length(unique(get(envg$PARAM$dataset_metadata$periodo)))]
+  envg$OUTPUT$test$ncol <- ncol(dataset_test)
+  envg$OUTPUT$test$nrow <- nrow(dataset_test)
+  envg$OUTPUT$test$periodos <- dataset_test[, length(unique(get(envg$PARAM$dataset_metadata$periodo)))]
 
   # Convertir a matriz de datos para XGBoost (recomendado para el rendimiento)
-  dataset_test <- xgb.DMatrix(data = data.matrix(dataset_test_dt))
+  #dataset_test <- xgb.DMatrix(data = data.matrix(dataset_test_dt))
 
 }
 

@@ -343,7 +343,7 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
 
 
   # En caso que se haga cross validation, se usa esta cantidad de folds
-  param_local$lgb_crossvalidation_folds <- 5
+  param_local$xgb_crossvalidation_folds <- 5
 
   param_local$train$clase01_valor1 <- c( "BAJA+2", "BAJA+1")
   param_local$train$positivos <- c( "BAJA+2")
@@ -361,7 +361,6 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
   param_local$xgb_param <- list(
     booster = "gbtree", # puede ir  dart  , ni pruebe random_forest
     objective = "binary:logistic",
-    eval_metric = "custom",
     #first_metric_only = TRUE, Habría que ver si hay que modificar la función de gan para que se comporte igual
     verbosity = 0,
     max_depth = 6,
