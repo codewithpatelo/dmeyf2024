@@ -159,7 +159,7 @@ EstimarGanancia_xgboost <- function(x) {
     maximize = TRUE,
     nrounds = param_completo$nrounds,
     early_stopping_rounds = param_completo$early_stopping_rounds,
-    verbose = 0
+    verbose = 2
   )
 
   cat("\n")
