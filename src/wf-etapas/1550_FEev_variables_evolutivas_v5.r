@@ -342,6 +342,7 @@ setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
 # with great power comes grest responsability
 #ACA HAY QUE EMPEZAR UN MEGA BUCLE
 
+if (envg$PARAM$Creacionismo$canaritos_inicio == TRUE) {
   inicio_key <- paste0("ncol_iter", 0, "_inicio")
   fin_key <- paste0("ncol_iter", 0, "_fin")
   envg$OUTPUT$Creacionismo[[inicio_key]] <- ncol(dataset)
@@ -352,7 +353,8 @@ setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
       GVEZ = 0
   )
 
-  envg$OUTPUT$Creacionismo[[fin_key]] <- ncol(dataset)
+  envg$OUTPUT$Creacionismo[[fin_key]] <- ncol(dataset)4
+}
 
 
 
@@ -417,7 +419,7 @@ for (k in 1:num_generaciones) {
  cat( "ordenado del dataset\n")
  setorderv(dataset, envg$PARAM$dataset_metadata$primarykey)
 
- if (envg$Creacionismo$fehist) {
+ if (envg$PARAM$Creacionismo$fehist) {
   if (envg$PARAM$lag1) {
     cat("Inicio lag1\n")
     
@@ -507,7 +509,7 @@ for (k in 1:num_generaciones) {
   }
  }
 
-  if (envg$Creacionismo$ferf) {
+  if (envg$PARAM$Creacionismo$ferf) {
     # la v3 no incluia RF
     AgregaVarRandomForest(GVEZ=k)
   }
