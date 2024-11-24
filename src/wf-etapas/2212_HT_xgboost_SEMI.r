@@ -532,7 +532,8 @@ EstimarGanancia_xgboostCV <- function(x) {
 
 
   # logueo final
-  ds <- list("cols" = ncol(dtrain), "rows" = nrow(dtrain))
+  ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
+           "rows" = nrow(xgboost::getinfo(dtrain, "label")))
   xx <- c(ds, copy(param_completo))
 
   xx$early_stopping_rounds <- NULL
