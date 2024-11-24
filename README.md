@@ -18,7 +18,6 @@ Correr código 990_workflow_competencia2_final.r (VM 256 GB RAM 24 vCPU)
 
   ts8 <- TS_strategy_est8() # Todos meses por default de 990 pero sacando Marzo y Abril
 
-  # la Bayesian Optimization con el semillerio dentro
   ht <- HT_tuning_semillerio(
     semillerio = 70, # semillerio dentro de la Bayesian Optim
     bo_iteraciones = 40  
