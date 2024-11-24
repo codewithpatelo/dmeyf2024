@@ -281,11 +281,11 @@ CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
 # Atencion, el undersampling es de 0.02
 #  tanto para entrenamineto como para  Final train$clase01_valor1
 
-TS_strategy_est8 <- function( pinputexps )
+TS_strategy_base8 <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/2101_TS_training_strategy_estacional.r"
+  param_local$meta$script <- "/src/wf-etapas/2101_TS_training_strategy.r"
 
   param_local$future <- c(202108)
 
@@ -364,17 +364,17 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
     eval_metric = "custom",
     #first_metric_only = TRUE, Habría que ver si hay que modificar la función de gan para que se comporte igual
     verbosity = 0,
-    max_depth = 6
-    gamma = 0.0
-    min_child_weight = 1
-    alpha = 0.0
-    lambda = 0.0
+    max_depth = 6,
+    gamma = 0.0,
+    min_child_weight = 1,
+    alpha = 0.0,
+    lambda = 0.0,
 
-    nrounds = 9999
-    early_stopping_base = 200
+    nrounds = 9999,
+    early_stopping_base = 200,
 
-    subsample = 1.0
-    scale_pos_weight = 1.0  # Para un desbalanceo leve. Ajustar según sea necesario.
+    subsample = 1.0,
+    scale_pos_weight = 1.0, # Para un desbalanceo leve. Ajustar según sea necesario.
 
     eta = c( 0.3, 0.8 ),
     colsample_bytree = c( 0.05, 0.95 ),
@@ -458,22 +458,22 @@ KA_evaluate_kaggle_semillerio <- function( pinputexps )
 # Que predice 202107 donde conozco la clase
 # y ya genera graficos
 
-wf_competencia2_final <- function( pnombrewf )
+wf_competencia2_final_xgb <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea fija
 
   # Etapa especificacion dataset de la Segunda Competencia Kaggle
   DT_incorporar_dataset( "~/buckets/b1/datasets/competencia_02.csv.gz")
-  DC_eliminar_bajas1()
+  #DC_eliminar_bajas1()
 
   CA_catastrophe_base( metodo="MachineLearning")
   FEintra_manual_creacionismo()
   DR_drifting_base(metodo="rank_cero_fijo")
   FEhist_valvulas()
   ultimo <- FErf_attributes_base()
-  #CN_canaritos_asesinos_base(ratio=1, desvio=0)
+  CN_canaritos_asesinos_base(ratio=1, desvio=0)
 
-  ts8 <- TS_strategy_est8()
+  ts8 <- TS_strategy_base8()
 
   # la Bayesian Optimization con el semillerio dentro
   ht <- HT_tuning_semillerio(
@@ -499,6 +499,6 @@ wf_competencia2_final <- function( pnombrewf )
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202108
-wf_competencia2_final()
+wf_competencia2_final_xgb()
 
 
