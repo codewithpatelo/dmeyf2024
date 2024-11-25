@@ -44,10 +44,7 @@ fganancia_xgb_meseta <- function(probs, datos) {
 
 
   GLOBAL_arbol <<- GLOBAL_arbol + 1
-  tbl <- as.data.table(list(
-    "prob" = probs,
-    "gan" = ifelse(vlabels == 1 & vpesos > 1,  envg$PARAM$train$gan1, envg$PARAM$train$gan0)
-  ))
+  tbl <- as.data.table(list(prob = preds, gan = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)))
 
   setorder(tbl, -prob)
   tbl[, posicion := .I]
@@ -362,10 +359,7 @@ fganancia_xgb_mesetaCV <- function(probs, datos) {
 
   GLOBAL_arbol <<- GLOBAL_arbol + 1
 
-  tbl <- as.data.table(list(
-    "prob" = probs,
-    "gan" = ifelse(vlabels == 1 & vpesos > 1,  envg$PARAM$train$gan1, envg$PARAM$train$gan0)
-  ))
+  tbl <- as.data.table(list(prob = preds, gan = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)))
 
   setorder(tbl, -prob)
   tbl[, posicion := .I]
@@ -430,6 +424,7 @@ EstimarGanancia_xgboostCV <- function(x) {
   modelocv <- xgb.cv(
     data = dtrain,
     label = getinfo(dtrain, "label"),
+    evals = list(train = dtrain, eval = dvalidate),
     feval = fganancia_xgb_mesetaCV,
     param = param_completo,
     stratified = TRUE, # sobre el cross validation
@@ -843,11 +838,14 @@ if (!file.exists("bayesiana.RDATA")) {
 }
 
 #------------------------------------------------------------------------------
-BO_log <- fread("BO_log.txt")
-envg$OUTPUT$ganancia_max <- BO_log[, max(ganancia, na.rm = TRUE)]
+if (file.exists("BO_log.txt")) {
+  BO_log <- fread("BO_log.txt")
+  envg$OUTPUT$ganancia_max <- BO_log[, max(ganancia, na.rm = TRUE)]
 
-envg$OUTPUT$time$end <- format(Sys.time(), "%Y%m%d %H%M%S")
-GrabarOutput()
+
+  envg$OUTPUT$time$end <- format(Sys.time(), "%Y%m%d %H%M%S")
+  GrabarOutput()
+}
 #------------------------------------------------------------------------------
 
 # ya no tiene sentido retomar, se termino el trabajo
