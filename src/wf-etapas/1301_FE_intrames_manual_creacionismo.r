@@ -214,9 +214,70 @@ AgregarVariables_IntraMes <- function(dataset) {
 
   
   # Supervariable Creacionista de Generación 1
-  dataset[, fem_iter_1_625 := rowSums(cbind(ctrx_quarter_normalizado, ctarjeta_visa_transacciones), na.rm = TRUE)]
+   if( atributos_presentes( c("ctrx_quarter_normalizado", "ctarjeta_visa_transacciones") ))
+    dataset[, fem_iter_1_var_625 := rowSums(cbind(ctrx_quarter_normalizado, ctarjeta_visa_transacciones), na.rm = TRUE)]
+
+  if( atributos_presentes( c("ctrx_quarter_normalizado", "cpayroll_trx") ))
+    dataset[, fem_iter_1_var_614 := rowSums(cbind(ctrx_quarter_normalizado, cpayroll_trx), na.rm = TRUE)]
+
+   if( atributos_presentes( c("vm_status01", "cpayroll_trx") ))
+    dataset[, fem_iter_1_var_644 := vm_status01 / cpayroll_trx]
+
+  if( atributos_presentes( c("cpayroll_trx", "ctarjeta_visa_transacciones") ))
+    dataset[, fem_iter_1_var_69 := cpayroll_trx * ctarjeta_visa_transacciones]
+
+  if( atributos_presentes( c("cpayroll_trx", "ctarjeta_visa_transacciones") ))
+    dataset[, fem_iter_1_var_285 := cpayroll_trx / ctarjeta_visa_transacciones]
+
+  if( atributos_presentes( c("cpayroll_trx", "vmr_mpagominimo") ))
+    dataset[, fem_iter_1_var_288 := cpayroll_trx / vmr_mpagominimo]
+
+  if( atributos_presentes( c("cpayroll_trx", "vmr_mpagominimo") ))
+    dataset[, fem_iter_1_var_15 := cpayroll_trx / vmr_mpagominimo]
+
+  if( atributos_presentes( c("vm_status01", "tcallcenter") ))
+    dataset[, fem_iter_1_var_796 := rowSums(cbind(vm_status01, tcallcenter), na.rm = TRUE)]
+
+  if( atributos_presentes( c("ctrx_quarter_normalizado", "tcallcenter") ))
+    dataset[, fem_iter_1_var_227 := ctrx_quarter_normalizado / tcallcenter]
+
+  if( atributos_presentes( c("vm_status01", "tcallcenter") ))
+   dataset[, fem_iter_1_var_796 := rowSums(cbind(vm_status01, ctarjeta_visa_transacciones), na.rm = TRUE)]
+  
+  if( atributos_presentes( c("ctrx_quarter_normalizado", "cliente_edad") ))
+    dataset[, fem_iter_1_var_20 := ctrx_quarter_normalizado * cliente_edad]
+
+  if( atributos_presentes( c("ctarjeta_visa_transacciones", "tcallcenter") ))
+    dataset[, fem_iter_1_var_227 := ctarjeta_visa_transacciones / tcallcenter]
+
+  if( atributos_presentes( c("ctrx_quarter_normalizado", "vmr_mpagominimo") ))
+    dataset[, fem_iter_1_var_796 := rowSums(cbind(ctrx_quarter_normalizado, vmr_mpagominimo), na.rm = TRUE)]
+
+  if( atributos_presentes( c("cpayroll_trx", "vm_status01") ))
+    dataset[, fem_iter_1_var_227 := cpayroll_trx / vm_status01]
+
+  if( atributos_presentes( c("tcallcenter", "vmr_mpagominimo") ))
+    dataset[, fem_iter_1_var_548 := tcallcenter / vmr_mpagominimo]
+
+  if( atributos_presentes( c("ctrx_quarter_normalizado", "vmr_mpagominimo") ))
+    dataset[, fem_iter_1_var_18 := ctrx_quarter_normalizado / vmr_mpagominimo]
+
+  if( atributos_presentes( c("vm_status01", "tcallcenter") ))
+    dataset[, fem_iter_1_var_487 := vm_status01 / tcallcenter] 
+
+  if( atributos_presentes( c("cpayroll_trx", "vmr_mpagominimo") ))
+    dataset[, fem_iter_1_var_796 := rowSums(cbind(cpayroll_trx, vmr_mpagominimo), na.rm = TRUE)]
+
 
   # Supervariables Creacionistas de Ordenes Superiores (GEN > 1)
+
+  if( atributos_presentes( c("ctrx_quarter_normalizado", "ctarjeta_visa_transacciones", "mpayroll_sobre_edad") ))
+    dataset[, fem_iter_2_var_617 := rowSums(cbind(ctrx_quarter_normalizado, ctarjeta_visa_transacciones, mpayroll_sobre_edad), na.rm = TRUE)]
+
+  if( atributos_presentes( c("ctrx_quarter", "ctarjeta_visa_transacciones", "cpayroll_trx", "vmr_mpagominimo") ))
+    dataset[, fem_iter_2_var_667 := rowSums(cbind(ctrx_quarter, ctarjeta_visa_transacciones, cpayroll_trx / vmr_mpagominimo), na.rm = TRUE)]
+
+    
   dataset[, fem_iter_5_var_622 := (
   ((mcaja_ahorro + mprestamos_personales) + (mtarjeta_visa_consumo + mpasivos_margen_lag1)) * 
   ((ctrx_quarter + mpayroll) + (mtarjeta_master_consumo)) +
