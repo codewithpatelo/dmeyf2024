@@ -157,7 +157,7 @@ FEhist_base <- function( pinputexps)
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/1501_FE_historia.r"
+  param_local$meta$script <- "/src/wf-etapas/z1501_FE_historia.r"
 
   param_local$lag1 <- TRUE
   param_local$lag2 <- TRUE # no me engraso con los lags de orden 2
@@ -295,12 +295,14 @@ TS_strategy_base9 <- function( pinputexps )
     202107, 202106, 202105, 202104, 202103, 202102, 202101, 
     202012, 202011, 202010, 202009, 202008, 202007, 
     # 202006  Excluyo por variables rotas
-    202005, 202004, 202003, 202002, 202001,
+    202005,
+    #202004, 202003, 
+    202002, 202001,
     201912, 201911,
     # 201910 Excluyo por variables rotas
-    201909, 201908, 201907, 201906
+    201909, 201908, 201907, 201906,
     # 201905  Excluyo por variables rotas
-    #201904, 201903
+    201904, 201903
   )
 
 
@@ -311,12 +313,14 @@ TS_strategy_base9 <- function( pinputexps )
     202105, 202104, 202103, 202102, 202101, 
     202012, 202011, 202010, 202009, 202008, 202007, 
     # 202006  Excluyo por variables rotas
-    202005, 202004, 202003, 202002, 202001,
+    202005, 
+    #202004, 202003, 
+    202002, 202001,
     201912, 201911,
     # 201910 Excluyo por variables rotas
-    201909, 201908, 201907, 201906
+    201909, 201908, 201907, 201906,
     # 201905  Excluyo por variables rotas
-    #201904, 201903
+    201904, 201903
   )
 
   param_local$train$mes_reciente <- "2021-07-01"
