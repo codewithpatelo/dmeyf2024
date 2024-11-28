@@ -343,7 +343,7 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
 {
   if( -1 == (param_local <- exp_init(pbypass=bypass))$resultado ) return( 0 ) # linea fija bypass
 
-  param_local$meta$script <- "/src/wf-etapas/2212_HT_lightgbm_SEMI_est.r"
+  param_local$meta$script <- "/src/wf-etapas/z2212_HT_lightgbm_SEMI.r"
 
 
   # En caso que se haga cross validation, se usa esta cantidad de folds
@@ -414,7 +414,7 @@ FM_final_models_lightgbm_semillerio <- function( pinputexps, ranks, semillerio, 
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/2302_FM_final_models_lightgbm_SEMI_est.r"
+  param_local$meta$script <- "/src/wf-etapas/z2302_FM_final_models_lightgbm_SEMI.r"
 
   # Que modelos quiero, segun su posicion en el ranking de la Bayesian Optimizacion, ordenado por metrica descendente
   param_local$modelos_rank <- ranks
@@ -440,7 +440,7 @@ SC_scoring_semillerio <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/2402_SC_scoring_lightgbm_SEMI_est.r"
+  param_local$meta$script <- "/src/wf-etapas/z2402_SC_scoring_lightgbm_SEMI.r"
 
   param_local$semilla <- NULL  # no usa semilla, es deterministico
 
@@ -490,7 +490,7 @@ wf_competencia3_modelo1 <- function( pnombrewf )
   ultimo <- FErf_attributes_base()
   #CN_canaritos_asesinos_base(ratio=1, desvio=0)
 
-  ts9 <- TS_strategy_base9()
+  ts8 <- TS_strategy_base9()
 
   # la Bayesian Optimization con el semillerio dentro
   ht <- HT_tuning_semillerio(
@@ -499,7 +499,7 @@ wf_competencia3_modelo1 <- function( pnombrewf )
   )
 
   fm <- FM_final_models_lightgbm_semillerio( 
-    c(ht, ts9), # los inputs
+    c(ht, ts8), # los inputs
     ranks = c(1), # 1 = el mejor de la bayesian optimization
     semillerio = 50,   # cantidad de semillas finales
     repeticiones_exp = 1  # cantidad de repeticiones del semillerio
