@@ -490,7 +490,7 @@ wf_competencia3_modelo2 <- function( pnombrewf )
   ultimo <- FErf_attributes_base()
   #CN_canaritos_asesinos_base(ratio=1, desvio=0)
 
-  ts8 <- TS_strategy_base9()
+  ts9 <- TS_strategy_base9()
 
   # la Bayesian Optimization con el semillerio dentro
   ht <- HT_tuning_semillerio(
@@ -499,13 +499,13 @@ wf_competencia3_modelo2 <- function( pnombrewf )
   )
 
   fm <- FM_final_models_lightgbm_semillerio( 
-    c(ht, ts8), # los inputs
+    c(ht, ts9), # los inputs
     ranks = c(1), # 1 = el mejor de la bayesian optimization
     semillerio = 50,   # cantidad de semillas finales
     repeticiones_exp = 1  # cantidad de repeticiones del semillerio
   )
 
-  SC_scoring_semillerio( c(fm, ts8) )
+  SC_scoring_semillerio( c(fm, ts9) )
   KA_evaluate_kaggle_semillerio()
   
 
