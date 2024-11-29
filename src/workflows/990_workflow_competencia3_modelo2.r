@@ -475,7 +475,7 @@ KA_evaluate_kaggle_semillerio <- function( pinputexps )
 # Que predice 202107 donde conozco la clase
 # y ya genera graficos
 
-wf_competencia3_modelo1 <- function( pnombrewf )
+wf_competencia3_modelo2 <- function( pnombrewf )
 {
   param_local <- exp_wf_init( pnombrewf ) # linea fija
 
@@ -516,6 +516,6 @@ wf_competencia3_modelo1 <- function( pnombrewf )
 # Aqui comienza el programa
 
 # llamo al workflow con future = 202109
-wf_competencia3_modelo1()
+wf_competencia3_modelo2()
 
 
