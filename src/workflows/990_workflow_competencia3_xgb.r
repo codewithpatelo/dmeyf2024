@@ -152,12 +152,12 @@ DR_drifting_base <- function( pinputexps, metodo)
 # Feature Engineering Historico  Baseline
 # deterministico, SIN random
 
-FEhist_valvulas <- function( pinputexps)
+FEhist_base <- function( pinputexps)
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 ) # linea fija
 
 
-  param_local$meta$script <- "/src/wf-etapas/1501_FE_historia_valvulas.r"
+  param_local$meta$script <- "/src/wf-etapas/z1501_FE_historia.r"
 
   param_local$lag1 <- TRUE
   param_local$lag2 <- TRUE # no me engraso con los lags de orden 2

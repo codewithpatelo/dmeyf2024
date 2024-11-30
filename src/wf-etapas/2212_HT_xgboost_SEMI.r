@@ -44,7 +44,10 @@ fganancia_xgb_meseta <- function(probs, datos) {
 
 
   GLOBAL_arbol <<- GLOBAL_arbol + 1
-  tbl <- as.data.table(list(prob = preds, gan = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)))
+  tbl <- as.data.table(list(
+    "prob" = probs, 
+    "gan" = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)
+    ))
 
   setorder(tbl, -prob)
   tbl[, posicion := .I]
@@ -359,7 +362,10 @@ fganancia_xgb_mesetaCV <- function(probs, datos) {
 
   GLOBAL_arbol <<- GLOBAL_arbol + 1
 
-  tbl <- as.data.table(list(prob = preds, gan = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)))
+  tbl <- as.data.table(list(
+    "prob" = probs, 
+    "gan" = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)
+    ))
 
   setorder(tbl, -prob)
   tbl[, posicion := .I]
