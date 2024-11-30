@@ -281,11 +281,11 @@ CN_canaritos_asesinos_base <- function( pinputexps, ratio, desvio)
 # Atencion, el undersampling es de 0.02
 #  tanto para entrenamineto como para  Final train$clase01_valor1
 
-TS_strategy_base8 <- function( pinputexps )
+TS_strategy_base9 <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/2101_TS_training_strategy.r"
+  param_local$meta$script <- "/src/wf-etapas/z2101_TS_training_strategy.r"
 
   param_local$future <- c(202109)
 
@@ -364,24 +364,26 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
   #  los que tienen un vector,  son los que participan de la Bayesian Optimization
 
   param_local$xgb_param <- list(
-    booster = "gbtree", # puede ir  dart  , ni pruebe random_forest
-    objective = "binary:logistic",
+    booster = "gbtree", # Como boosting = "gbdt" en lgm
+    objective = "binary:logistic", # Como objective = "binary" en lgm
+    tree_method = "hist",
     #first_metric_only = TRUE, Habría que ver si hay que modificar la función de gan para que se comporte igual
     verbosity = 0,
-    max_depth = 6,
-    gamma = 0.0,
-    min_child_weight = 1,
-    alpha = 0.0,
-    lambda = 0.0,
+    max_depth = 6L,
+    gamma = 0.0, # Corresponde a min_gain_to_split = 0.0
+    min_child_weight = 0.001, # Para ser equivalente a min_sum_hessian_in_leaf = 0.001
+    alpha = 0.0, # Equivalente a lambda_l1
+    lambda = 0.0, # Equivalente a lambda_l2
+    max_bin = 31L, # lo debo dejar fijo, no participa de la BO
 
-    nrounds = 9999,
-    early_stopping_base = 200,
+    nrounds = 9999L, # num_iterations = 9999L en lgm
+    early_stopping_base = 200L,
 
-    subsample = 1.0,
-    scale_pos_weight = 1.0, # Para un desbalanceo leve. Ajustar según sea necesario.
+    subsample = 1.0, # Equivalente a bagging_fraction
+    scale_pos_weight = 1.0, # is_unbalance 
 
-    eta = c( 0.3, 0.8 ),
-    colsample_bytree = c( 0.05, 0.95 ),
+    eta = c( 0.3, 0.8 ), # learning_rate en lgm
+    colsample_bytree = c( 0.05, 0.95 ), # feature_fraction en lgm
 
     leaf_size_log = c( -10, -5),   # deriva en min_data_in_leaf
     coverage_log = c( -8, 0 )      # deriva en num_leaves

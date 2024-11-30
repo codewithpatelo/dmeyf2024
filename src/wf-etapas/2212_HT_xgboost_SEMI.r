@@ -33,7 +33,7 @@ source( paste0( args[1] , "/src/lib/action_lib.r" ) )
 
 #------------------------------------------------------------------------------
 
-GLOBAL_arbol <- 0
+GLOBAL_arbol <- 0L
 GLOBAL_gan_max <- -Inf
 vcant_optima <- c()
 
@@ -41,6 +41,10 @@ vcant_optima <- c()
 fganancia_xgb_meseta <- function(probs, datos) {
   vlabels <- getinfo(datos, "label")
   vpesos <- getinfo(datos, "weight")
+
+  # Concatenar y mostrar
+  cat("Labels:\n", paste(vlabels, collapse = ", "), "\n")
+  cat("Pesos:\n", paste(vpesos, collapse = ", "), "\n")
 
 
   GLOBAL_arbol <<- GLOBAL_arbol + 1
@@ -53,12 +57,10 @@ fganancia_xgb_meseta <- function(probs, datos) {
   tbl[, posicion := .I]
   tbl[, gan_acum := cumsum(gan)]
 
-   tbl[, gan_suavizada := frollmean(
-    x = gan_acum, 
-    n = envg$PARAM$train$meseta, 
-    align = "center", 
-    na.rm = TRUE, 
-    hasNA = TRUE
+  tbl[, gan_suavizada :=
+    frollmean(
+      x = gan_acum, n = envg$PARAM$train$meseta, align = "center",
+      na.rm = TRUE, hasNA = TRUE
   )]
 
   gan <- tbl[, max(gan_suavizada, na.rm = TRUE)]
@@ -88,8 +90,8 @@ fganancia_xgb_meseta <- function(probs, datos) {
 EstimarGanancia_xgboost <- function(x) {
 
   cat( "Inicio EstimarGanancia_xgboost()\n")
-  gc(verbose= FALSE)
-  GLOBAL_iteracion <<- GLOBAL_iteracion + 1
+  gc(verbose=TRUE)
+  GLOBAL_iteracion <<- GLOBAL_iteracion + 1L
   envg$OUTPUT$BO$iteracion_actual <<- GLOBAL_iteracion
   GrabarOutput()
 
@@ -113,11 +115,11 @@ EstimarGanancia_xgboost <- function(x) {
    param_completo$colsample_bytree <- 2.0 ^ param_completo$colsample_bytree_log
 
   if( "nrounds_log" %in% names(param_completo) ) # Equivale a num_iterations de LGM
-   param_completo$nrounds <- pmax( as.integer( round( 2.0 ^ param_completo$nrounds_log ) ))
+   param_completo$nrounds <- pmax( 1L, as.integer( round( 2.0 ^ param_completo$nrounds_log ) ))
 
 
   if( "min_child_weight_log" %in% names(param_completo) )
-   param_completo$min_child_weight <- pmax( as.integer( round(2.0 ^ param_completo$min_child_weight_log))) # Similar a min data in leaf de LGM
+   param_completo$min_child_weight <- pmax( 1L, as.integer( round(2.0 ^ param_completo$min_child_weight_log)))# Similar a min data in leaf de LGM
 
   # Transformación de leaf_size_log y coverage para XGBoost
   if ("leaf_size_log" %in% names(param_completo) & 
@@ -147,7 +149,7 @@ EstimarGanancia_xgboost <- function(x) {
     as.integer( param_completo$early_stopping_base + 4 / param_completo$eta)
   param_completo$early_stopping_base <- NULL
 
-  GLOBAL_arbol <<- 0
+  GLOBAL_arbol <<- 0L
   GLOBAL_gan_max <<- -Inf
   vcant_optima <<- c()
   set.seed(envg$PARAM$xgb_semilla, kind = "L'Ecuyer-CMRG")
@@ -360,7 +362,7 @@ fganancia_xgb_mesetaCV <- function(probs, datos) {
   vlabels <- getinfo(datos, "label")
   vpesos <- getinfo(datos, "weight")
 
-  GLOBAL_arbol <<- GLOBAL_arbol + 1
+  GLOBAL_arbol <<- GLOBAL_arbol + 1L
 
   tbl <- as.data.table(list(
     "prob" = probs, 
@@ -540,7 +542,7 @@ EstimarGanancia_xgboostCV <- function(x) {
   xx$early_stopping_rounds <- NULL
   xx$nrounds <- modelocv$best_iteration
   xx$estimulos <- cant_corte
-  xx$qsemillas <- 1
+  xx$qsemillas <- 1L
   xx$ganancia <- ganancia_normalizada
   xx$metrica <- ganancia_normalizada
   xx$iteracion_bayesiana <- GLOBAL_iteracion
