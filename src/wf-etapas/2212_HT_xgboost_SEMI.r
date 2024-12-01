@@ -41,119 +41,121 @@ vcant_optima <- c()
 fganancia_xgb_meseta <- function(probs, datos) {
   vlabels <- getinfo(datos, "label")
   vpesos <- getinfo(datos, "weight")
-
-  # Concatenar y mostrar
-  cat("Labels:\n", paste(vlabels, collapse = ", "), "\n")
-  cat("Pesos:\n", paste(vpesos, collapse = ", "), "\n")
-
-
+  
+  
+  
   GLOBAL_arbol <<- GLOBAL_arbol + 1
   tbl <- as.data.table(list(
     "prob" = probs, 
     "gan" = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)
-    ))
-
+  ))
+  
   setorder(tbl, -prob)
   tbl[, posicion := .I]
   tbl[, gan_acum := cumsum(gan)]
-
+  
   tbl[, gan_suavizada :=
-    frollmean(
-      x = gan_acum, n = envg$PARAM$train$meseta, align = "center",
-      na.rm = TRUE, hasNA = TRUE
-  )]
-
+        frollmean(
+          x = gan_acum, n = envg$PARAM$train$meseta, align = "center",
+          na.rm = TRUE, hasNA = TRUE
+        )]
+  
+  
   gan <- tbl[, max(gan_suavizada, na.rm = TRUE)]
-
-
+  
+  # Reemplazar NA con 0
+  #tbl[, gan_suavizada := ifelse(is.na(gan_suavizada), 0, gan_suavizada)]
+  
+  # O eliminar filas con NA en 'gan_suavizada'
+  #tbl <- tbl[!is.na(gan_suavizada)]
+  #if (is.infinite(gan)) gan <- 0
+  
   pos <- which.max(tbl[, gan_suavizada])
   vcant_optima <<- c(vcant_optima, pos)
-
+  
   if (GLOBAL_arbol %% 10 == 0) {
     if (gan > GLOBAL_gan_max) GLOBAL_gan_max <<- gan
-
+    
     cat("\r")
     cat(
       "Validate ", GLOBAL_iteracion, " ", " ",
       GLOBAL_arbol, "  ", gan, "   ", GLOBAL_gan_max, "   "
     )
   }
-
-
-  return(list(
-    "metric_name" = "ganancia",
-    "metric_value" = gan
-  ))
+  
+  
+  return(list(metric = "ganancia", value = gan))
+  
 }
 #------------------------------------------------------------------------------
 
 EstimarGanancia_xgboost <- function(x) {
-
+  
   cat( "Inicio EstimarGanancia_xgboost()\n")
   gc(verbose=TRUE)
   GLOBAL_iteracion <<- GLOBAL_iteracion + 1L
   envg$OUTPUT$BO$iteracion_actual <<- GLOBAL_iteracion
   GrabarOutput()
-
+  
   # para que una siguiente corrida pueda retomar
   if( file.exists("bayesiana.RDATA") ) {
-
+    
     cat(format(Sys.time(), "%Y%m%d %H%M%S"), "\n",
-      file = "z-Rcanresume.txt",
-      append = TRUE
-     )
+        file = "z-Rcanresume.txt",
+        append = TRUE
+    )
   }
-
-
+  
+  
   # hago la union de los parametros basicos y los moviles que vienen en x
   param_completo <- c(envg$PARAM$xgb_basicos, x)
-
+  
   if( "eta_log" %in% names(param_completo) )
-   param_completo$eta <- 2.0 ^ param_completo$eta_log # Equivale a Learning Rate de LGM
-
+    param_completo$eta <- 2.0 ^ param_completo$eta_log # Equivale a Learning Rate de LGM
+  
   if( "colsample_bytree_log" %in% names(param_completo) ) # Equivale a Feature Fraction de LGM
-   param_completo$colsample_bytree <- 2.0 ^ param_completo$colsample_bytree_log
-
+    param_completo$colsample_bytree <- 2.0 ^ param_completo$colsample_bytree_log
+  
   if( "nrounds_log" %in% names(param_completo) ) # Equivale a num_iterations de LGM
-   param_completo$nrounds <- pmax( 1L, as.integer( round( 2.0 ^ param_completo$nrounds_log ) ))
-
-
+    param_completo$nrounds <- pmax( 1L, as.integer( round( 2.0 ^ param_completo$nrounds_log ) ))
+  
+  
   if( "min_child_weight_log" %in% names(param_completo) )
-   param_completo$min_child_weight <- pmax( 1L, as.integer( round(2.0 ^ param_completo$min_child_weight_log)))# Similar a min data in leaf de LGM
-
+    param_completo$min_child_weight <- pmax( 1L, as.integer( round(2.0 ^ param_completo$min_child_weight_log)))# Similar a min data in leaf de LGM
+  
   # Transformación de leaf_size_log y coverage para XGBoost
   if ("leaf_size_log" %in% names(param_completo) & 
-     "coverage_log" %in% names(param_completo)) {
-  
-     # Tamaño mínimo de las hojas (min_child_weight en XGBoost)
-     param_completo$min_child_weight <- pmax(1, round(nrow(dtrain) * (2.0 ^ param_completo$leaf_size_log)))
-  
-     # Número máximo de hojas (max_leaves en XGBoost, cuando grow_policy = "lossguide")
-     param_completo$max_leaves <- pmin(
+      "coverage_log" %in% names(param_completo)) {
+    
+    # Tamaño mínimo de las hojas (min_child_weight en XGBoost)
+    param_completo$min_child_weight <- pmax(1, round(nrow(dtrain) * (2.0 ^ param_completo$leaf_size_log)))
+    
+    # Número máximo de hojas (max_leaves en XGBoost, cuando grow_policy = "lossguide")
+    param_completo$max_leaves <- pmin(
       131072, 
       pmax(8, round(((2.0 ^ param_completo$coverage_log)) * nrow(dtrain) / param_completo$min_child_weight))
-     )
-   }
-
-  if ("leaf_size_log" %in% names(param_completo) & 
-    !("coverage_log" %in% names(param_completo))) {
-  
-  # Tamaño mínimo de las hojas
-  param_completo$min_child_weight <- pmax(1, round(nrow(dtrain) * (2.0 ^ param_completo$leaf_size_log)))
+    )
   }
-
+  
+  if ("leaf_size_log" %in% names(param_completo) & 
+      !("coverage_log" %in% names(param_completo))) {
+    
+    # Tamaño mínimo de las hojas
+    param_completo$min_child_weight <- pmax(1, round(nrow(dtrain) * (2.0 ^ param_completo$leaf_size_log)))
+  }
+  
   # Otros parámetros de XGBoost relacionados con el tamaño de hojas y estructura
   param_completo$grow_policy <- "lossguide" # Basado en hojas, en lugar de profundidad
-
+  
   param_completo$early_stopping_rounds <-
     as.integer( param_completo$early_stopping_base + 4 / param_completo$eta)
   param_completo$early_stopping_base <- NULL
-
+  
   GLOBAL_arbol <<- 0L
   GLOBAL_gan_max <<- -Inf
   vcant_optima <<- c()
   set.seed(envg$PARAM$xgb_semilla, kind = "L'Ecuyer-CMRG")
-
+  
   modelo_train <- xgb.train(
     data = dtrain,
     evals = list(train = dtrain, eval = dvalidate),
@@ -164,11 +166,11 @@ EstimarGanancia_xgboost <- function(x) {
     early_stopping_rounds = param_completo$early_stopping_rounds,
     verbose = 2
   )
-
+  
   cat("\n")
-
+  
   cant_corte <- vcant_optima[modelo_train$best_iteration]
-
+  
   tiempo_normals <- c()
   gan_normals <- c()
   cant_normals <- c()
@@ -177,13 +179,13 @@ EstimarGanancia_xgboost <- function(x) {
   {
     # donde acumulo el semillerio
     tb_semillerio <- as.data.table( list( prob_acum = rep(0, nrow(dataset_test)) ))
-
+    
     semi_ganancia_test <- 0
     semi_cantidad_test_normalizada <- 0
-
+    
     t0_loop <- proc.time()
     tiempo_loop <- 0.0
-
+    
     isem <- 0
     while( isem < envg$PARAM$train$semillerio & tiempo_loop < envg$PARAM$train$timeout )
     {
@@ -192,12 +194,12 @@ EstimarGanancia_xgboost <- function(x) {
       param_ganador <- copy( param_completo )
       if( "leaf_size_log" %in% param_ganador )  param_ganador$leaf_size_log <- NULL
       if( "coverage_log" %in% param_ganador )  param_ganador$coverage_log <- NULL
-
+      
       param_ganador$nrounds <- modelo_train$best_iteration
       param_ganador$early_stopping <- 0
       sem <- envg$PARAM$semillas[  (iexp-1)*envg$PARAM$train$repeticiones_exp + isem ]
       param_ganador$seed <- sem
-
+      
       set.seed(envg$PARAM$seed, kind = "L'Ecuyer-CMRG")
       modelo_local <- xgb.train(
         data = dtrain,
@@ -205,25 +207,25 @@ EstimarGanancia_xgboost <- function(x) {
         nrounds = param_ganador$nrounds,
         verbose = 2
       )
-
+      
       t1_local <- proc.time()
       tiempo_local <- as.numeric( t1_local[1] - t0_local[1] + t1_local[2] - t0_local[2] )
       tiempo_loop <- as.numeric( t1_local[1] - t0_loop[1] + t1_local[2] - t0_loop[2] )
-
+      
       # aplico el modelo a testing y calculo la ganancia
       prediccion <- predict(
         modelo_local,
         data.matrix(dataset_test[, campos_buenos, with = FALSE])
       )
-
+      
       # acumulo en el semillerio
       tb_semillerio[ , prob_acum := prob_acum + prediccion ]
-
+      
       tbl1 <- copy(dataset_test[, list("gan" = 
-        ifelse(get(envg$PARAM$dataset_metadata$clase) %in%  envg$PARAM$train$positivos, 
-           envg$PARAM$train$gan1, 
-           envg$PARAM$train$gan0))])
-
+                                         ifelse(get(envg$PARAM$dataset_metadata$clase) %in%  envg$PARAM$train$positivos, 
+                                                envg$PARAM$train$gan1, 
+                                                envg$PARAM$train$gan0))])
+      
       tbl1[, prob := prediccion]
       setorder(tbl1, -prob)
       tbl1[, gan_acum := cumsum(gan)]
@@ -231,18 +233,18 @@ EstimarGanancia_xgboost <- function(x) {
         x = gan_acum, n = envg$PARAM$train$meseta,
         align = "center", na.rm = TRUE, hasNA = TRUE
       )]
-
-
+      
+      
       ganancia_test_normalizada <- tbl1[, max(gan_suavizada, na.rm = TRUE)]
       cantidad_test_normalizada <- which.max(tbl1[, gan_suavizada])
       cant_normals <- c(cant_normals, cantidad_test_normalizada )
-
+      
       # ahora para el semillerio
       tbl2 <- copy(dataset_test[, list("gan" = 
-        ifelse(get(envg$PARAM$dataset_metadata$clase) %in%  envg$PARAM$train$positivos, 
-           envg$PARAM$train$gan1, 
-           envg$PARAM$train$gan0))])
-
+                                         ifelse(get(envg$PARAM$dataset_metadata$clase) %in%  envg$PARAM$train$positivos, 
+                                                envg$PARAM$train$gan1, 
+                                                envg$PARAM$train$gan0))])
+      
       tbl2[, prob := tb_semillerio$prob_acum]
       setorder(tbl2, -prob)
       tbl2[, gan_acum := cumsum(gan)]
@@ -250,21 +252,21 @@ EstimarGanancia_xgboost <- function(x) {
         x = gan_acum, n = envg$PARAM$train$meseta,
         align = "center", na.rm = TRUE, hasNA = TRUE
       )] 
-
-
+      
+      
       semi_ganancia_test_normalizada <- tbl2[, max(gan_suavizada, na.rm = TRUE)]
       semi_cantidad_test_normalizada <- which.max(tbl2[, gan_suavizada])
-
-
+      
+      
       rm(tbl)
       gc(verbose= FALSE)
-
+      
       # logueo final
       ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
-           "rows" = nrow(xgboost::getinfo(dtrain, "label")))
-
+                 "rows" = nrow(xgboost::getinfo(dtrain, "label")))
+      
       xx <- c(ds, copy(param_completo))
-
+      
       xx$early_stopping_rounds <- NULL
       xx$nrounds <- NULL
       xx$nrounds <- modelo_train$best_iteration
@@ -277,7 +279,7 @@ EstimarGanancia_xgboost <- function(x) {
       xx$metrica <- ganancia_test_normalizada
       xx$iteracion_bayesiana <- GLOBAL_iteracion
       mlog_log(xx, arch = "BO_log_detalle.txt")
-
+      
       xx$estimulos <- semi_cantidad_test_normalizada
       xx$qsemillas <- isem
       xx$semilla <- -1
@@ -287,7 +289,7 @@ EstimarGanancia_xgboost <- function(x) {
       xx$metrica <- semi_ganancia_test_normalizada
       mlog_log(xx, arch = "BO_log_detalle_semi.txt")
     }
-
+    
     # acumulo en vector resultados de semillerios completos
     tiempo_normals <- c( tiempo_normals, tiempo_loop )
     gan_normals <- c( gan_normals, semi_ganancia_test_normalizada)
@@ -299,11 +301,11 @@ EstimarGanancia_xgboost <- function(x) {
   tiempo_test_normalizado <- mean(tiempo_normals)
   ganancia_test_normalizada <- mean(gan_normals)
   cantidad_test_normalizada <- round(mean(cant_normals))
-
-   ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
-           "rows" = nrow(xgboost::getinfo(dtrain, "label")))
+  
+  ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
+             "rows" = nrow(xgboost::getinfo(dtrain, "label")))
   xx <- c(ds, copy(param_completo))
-
+  
   xx$early_stopping_rounds <- NULL
   xx$nrounds <- modelo_train$best_iteration
   xx$estimulos <- cantidad_test_normalizada
@@ -313,18 +315,18 @@ EstimarGanancia_xgboost <- function(x) {
   xx$ganancia <- ganancia_test_normalizada
   xx$metrica <- ganancia_test_normalizada
   xx$iteracion_bayesiana <- GLOBAL_iteracion
-
+  
   superacion <- FALSE
   # voy grabando las mejores column importance
   if (ganancia_test_normalizada > GLOBAL_ganancia) {
     GLOBAL_ganancia <<- ganancia_test_normalizada
     tb_importancia <- as.data.table(xgb.importance(modelo_train))
-
+    
     fwrite(tb_importancia,
-      file = paste0("impo_", sprintf("%03d", GLOBAL_iteracion), ".txt"),
-      sep = "\t"
+           file = paste0("impo_", sprintf("%03d", GLOBAL_iteracion), ".txt"),
+           sep = "\t"
     )
-
+    
     rm(tb_importancia)
     envg$OUTPUT$BO$mejor$iteracion <<- GLOBAL_iteracion
     envg$OUTPUT$BO$mejor$ganancia <<- GLOBAL_ganancia
@@ -332,25 +334,25 @@ EstimarGanancia_xgboost <- function(x) {
     envg$OUTPUT$BO$mejor$arboles <<- modelo_train$best_iteration
     GrabarOutput()
     mlog_log(xx, arch = "BO_log_mejor.txt")
-
+    
     t <- format(Sys.time(), "%Y%m%d %H%M%S")
     cat( t, "\n",
-      file = "z-Rcanbypass.txt",
-      append = TRUE
+         file = "z-Rcanbypass.txt",
+         append = TRUE
     )
-
+    
     superacion <- TRUE
   }
-
+  
   mlog_log(xx, arch = "BO_log.txt", parentreplicate= superacion)
-
+  
   # retorno el vector con las dos variables que optimizo al mismo tiempo
   set.seed(envg$PARAM$seed, kind = "L'Ecuyer-CMRG")
   return( c( xx$metrica, 
              xx$tiempo_corrida
-            )
-        )  # tiempo al azar
-
+  )
+  )  # tiempo al azar
+  
 }
 #------------------------------------------------------------------------------
 # esta es la funcion mas mistica de toda la asignatura
@@ -361,14 +363,14 @@ vcant_optima <- c()
 fganancia_xgb_mesetaCV <- function(probs, datos) {
   vlabels <- getinfo(datos, "label")
   vpesos <- getinfo(datos, "weight")
-
+  
   GLOBAL_arbol <<- GLOBAL_arbol + 1L
-
+  
   tbl <- as.data.table(list(
     "prob" = probs, 
     "gan" = ifelse(vlabels == 1 & vpesos > 1, envg$PARAM$train$gan1, envg$PARAM$train$gan0)
-    ))
-
+  ))
+  
   setorder(tbl, -prob)
   tbl[, posicion := .I]
   tbl[, gan_acum := cumsum(gan)]
@@ -376,16 +378,16 @@ fganancia_xgb_mesetaCV <- function(probs, datos) {
     x = gan_acum, n = as.integer(envg$PARAM$train$meseta/envg$PARAM$xgb_crossvalidation_folds),
     align = "center", na.rm = TRUE, hasNA = TRUE
   )]
-
+  
   gan <- tbl[, max(gan_suavizada, na.rm = TRUE)]
-
+  
   pos <- which.max(tbl[, gan_suavizada])
-
+  
   vcant_optima <<- c(vcant_optima, pos)
-
+  
   if (GLOBAL_arbol %% (10 * envg$PARAM$xgb_crossvalidation_folds) == 0) {
     if (gan > GLOBAL_gan_max) GLOBAL_gan_max <<- gan
-
+    
     cat("\r")
     cat(
       "Cross Validate ", GLOBAL_iteracion, " ", " ",
@@ -394,36 +396,33 @@ fganancia_xgb_mesetaCV <- function(probs, datos) {
       GLOBAL_gan_max * envg$PARAM$xgb_crossvalidation_folds, "   "
     )
   }
-
-  return(list(
-    "metric_name" = "ganancia",
-    "metric_value" = gan,
-  ))
+  
+  return(list(metric = "ganancia", value = gan))
 }
 #------------------------------------------------------------------------------
 
 EstimarGanancia_xgboostCV <- function(x) {
-
+  
   cat( "Inicio EstimarGanancia_xgboostCV()\n")
   gc(verbose= FALSE)
   GLOBAL_iteracion <<- GLOBAL_iteracion + 1L
   envg$OUTPUT$BO$iteracion_actual <<- GLOBAL_iteracion
   GrabarOutput()
-
+  
   # para que una siguiente corrida pueda retomar
   if( file.exists("bayesiana.RDATA") ) {
-
+    
     cat(format(Sys.time(), "%Y%m%d %H%M%S"), "\n",
-      file = "z-Rcanresume.txt",
-      append = TRUE
-     )
+        file = "z-Rcanresume.txt",
+        append = TRUE
+    )
   }
-
+  
   param_completo <- c(envg$PARAM$xgb_basicos, x)
-
+  
   param_completo$early_stopping_rounds <-
     as.integer(400 + 4 / param_completo$eta)
-
+  
   vcant_optima <<- c()
   GLOBAL_arbol <<- 0L
   GLOBAL_gan_max <<- -Inf
@@ -444,101 +443,101 @@ EstimarGanancia_xgboostCV <- function(x) {
       cb.evaluation.log(modelocv_log) # Callback para registrar métricas
     )
   )
-
+  
   cat("\n")
-
+  
   desde <- (modelocv$best_iteration - 1) * envg$PARAM$xgb_crossvalidation_folds + 1
   hasta <- desde + envg$PARAM$xgb_crossvalidation_folds - 1
-
-  cant_corte <- as.integer(mean(vcant_optima[desde:hasta]) *
-    envg$PARAM$xgb_crossvalidation_folds)
   
- 
+  cant_corte <- as.integer(mean(vcant_optima[desde:hasta]) *
+                             envg$PARAM$xgb_crossvalidation_folds)
+  
+  
   ganancia <- unlist(modelocv_log$valid$ganancia)[modelocv$best_iteration]
   ganancia_normalizada <- ganancia * envg$PARAM$xgb_crossvalidation_folds
-
-
+  
+  
   if (ktest == TRUE) {
     # debo recrear el modelo
     param_completo$early_stopping_rounds <- NULL
     param_completo$nrounds <- modelocv$best_iteration
-
+    
     modelo <- xgb.train(
       data = dtrain,
       param = param_completo,
       nrounds = param_completo$nrounds,
       verbose = 0
     )
-
+    
     # aplico el modelo a testing y calculo la ganancia
     prediccion <- predict(
       modelo,
       data.matrix(dataset_test[, campos_buenos, with = FALSE])
     )
-
+    
     tbl <- copy(dataset_test[
       ,
       list("gan" = ifelse(get(envg$PARAM$dataset_metadata$clase) %in% envg$PARAM$train$positivos, 
-         envg$PARAM$train$gan1, envg$PARAM$train$gan0))
+                          envg$PARAM$train$gan1, envg$PARAM$train$gan0))
     ])
-
+    
     tbl[, prob := prediccion]
     setorder(tbl, -prob)
-
+    
     tbl[, gan_acum := cumsum(gan)]
     tbl[, gan_suavizada := frollmean(
       x = gan_acum, n = envg$PARAM$train$meseta,
       align = "center", na.rm = TRUE, hasNA = TRUE
     )]
-
-
+    
+    
     # Dato que hay testing, estos valores son ahora los oficiales
     ganancia_normalizada <- tbl[, max(gan_suavizada, na.rm = TRUE)]
     cant_corte <- which.max(tbl[, gan_suavizada])
-
+    
     rm(tbl)
     gc(verbose= FALSE)
   }
-
-
-
+  
+  
+  
   # voy grabando las mejores column importance
   if (ganancia_normalizada > GLOBAL_ganancia) {
     GLOBAL_ganancia <<- ganancia_normalizada
-
+    
     param_impo <- copy(param_completo)
     param_impo$early_stopping_rounds <- 0
     param_impo$nrounds <- modelocv$best_iteration
-
+    
     modelo <- xgb.train(
       data = dtrain,
       param = param_impo,
       nrounds = param_impo$nrounds,
       verbose = 2
     )
-
+    
     tb_importancia <- as.data.table(xgb.importance(modelo))
-
+    
     fwrite(tb_importancia,
-      file = paste0("impo_", GLOBAL_iteracion, ".txt"),
-      sep = "\t"
+           file = paste0("impo_", GLOBAL_iteracion, ".txt"),
+           sep = "\t"
     )
-
+    
     rm(tb_importancia)
-
+    
     envg$OUTPUT$BO$mejor$iteracion <<- GLOBAL_iteracion
     envg$OUTPUT$BO$mejor$ganancia <<- GLOBAL_ganancia
     envg$OUTPUT$BO$mejor$metrica <<- GLOBAL_ganancia
     envg$OUTPUT$BO$mejor$arboles <<- modelocv$best_iteration
     GrabarOutput()
   }
-
-
+  
+  
   # logueo final
   ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
-           "rows" = nrow(xgboost::getinfo(dtrain, "label")))
+             "rows" = nrow(xgboost::getinfo(dtrain, "label")))
   xx <- c(ds, copy(param_completo))
-
+  
   xx$early_stopping_rounds <- NULL
   xx$nrounds <- modelocv$best_iteration
   xx$estimulos <- cant_corte
@@ -546,7 +545,7 @@ EstimarGanancia_xgboostCV <- function(x) {
   xx$ganancia <- ganancia_normalizada
   xx$metrica <- ganancia_normalizada
   xx$iteracion_bayesiana <- GLOBAL_iteracion
-
+  
   mlog_log(xx, arch = "BO_log.txt")
   set.seed(envg$PARAM$xgb_semilla, kind = "L'Ecuyer-CMRG")
   
@@ -559,27 +558,27 @@ parametrizar  <- function( lparam )
 {
   param_fijos  <- copy( lparam )
   hs  <- list()
-
+  
   for( param  in  names( lparam ) )
   {
     if( length( lparam[[ param ]] ) > 1 )
     {
       desde  <- as.numeric( lparam[[ param ]][[1]]  )
       hasta  <- as.numeric( lparam[[ param ]][[2]]  )
-
+      
       if( length( lparam[[ param ]] ) == 2 )
       {
-         hs  <- append( hs,  
-                        list( makeNumericParam( param, lower= desde, upper= hasta)  ) )
+        hs  <- append( hs,  
+                       list( makeNumericParam( param, lower= desde, upper= hasta)  ) )
       } else {
-         hs  <- append( hs, 
-                        list( makeIntegerParam( param, lower= desde, upper= hasta) ) )
+        hs  <- append( hs, 
+                       list( makeIntegerParam( param, lower= desde, upper= hasta) ) )
       }
-
+      
       param_fijos[[ param ]] <- NULL  #lo quito 
     }
   }
-
+  
   return( list( "param_fijos" =  param_fijos,
                 "paramSet"    =  hs ) )
 }
@@ -647,8 +646,8 @@ if (dataset[fold_train == 1, .N] == 0) {
 GrabarOutput()
 
 cat(envg$PARAM$exp_input,
-  file = "TrainingStrategy.txt",
-  append = FALSE
+    file = "TrainingStrategy.txt",
+    append = FALSE
 )
 
 # defino la clase binaria clase01
@@ -690,18 +689,18 @@ if (dataset[fold_train == 0 & fold_test == 0 & fold_validate == 1, .N] > 0) {
   kcrossvalidation <- FALSE
   kvalidate <- TRUE
   dvalidate <- xgb.DMatrix(
-  data = data.matrix(dataset[fold_validate == 1, campos_buenos, with = FALSE]),
-  label = dataset[fold_validate == 1, clase01],
-  weight = dataset[
-    fold_validate == 1,
-    ifelse(get(envg$PARAM$dataset_metadata$clase) %in%  envg$PARAM$train$positivos, 1.0000001, 1.0 )
-  ]
-)
-
-
+    data = data.matrix(dataset[fold_validate == 1, campos_buenos, with = FALSE]),
+    label = dataset[fold_validate == 1, clase01],
+    weight = dataset[
+      fold_validate == 1,
+      ifelse(get(envg$PARAM$dataset_metadata$clase) %in%  envg$PARAM$train$positivos, 1.0000001, 1.0 )
+    ]
+  )
+  
+  
   envg$OUTPUT$validate$ncol <- ncol(dvalidate)
   envg$OUTPUT$validate$nrow <- nrow(dvalidate)
-
+  
   envg$OUTPUT$validate$periodos <- dataset[
     fold_validate == 1,
     length(unique(get(envg$PARAM$dataset_metadata$periodo)))
@@ -717,17 +716,17 @@ if (dataset[fold_train == 0 & fold_validate == 0 & fold_test == 1, .N] > 0) {
     copy(colnames(dataset)),
     c("fold_train", "fold_validate", "fold_test")
   )
-
+  
   # Filtrado del conjunto de test
   dataset_test <- dataset[fold_test == 1, campos_buenos_test, with = FALSE]
-
+  
   envg$OUTPUT$test$ncol <- ncol(dataset_test)
   envg$OUTPUT$test$nrow <- nrow(dataset_test)
   envg$OUTPUT$test$periodos <- dataset_test[, length(unique(get(envg$PARAM$dataset_metadata$periodo)))]
-
+  
   # Convertir a matriz de datos para XGBoost (recomendado para el rendimiento)
   #dataset_test <- xgb.DMatrix(data = data.matrix(dataset_test_dt))
-
+  
 }
 
 # Inicializo MLFlow
@@ -737,7 +736,7 @@ if (kcrossvalidation) {
   datahash <- mlog_table_hash( dataset[, envg$PARAM$dataset_metadata$primarykey, with=FALSE ] )
   mlflow_exp_det <- paste0( "/xval-", datahash )
 } else {
-
+  
   datahash <- mlog_table_hash( dataset_test[, envg$PARAM$dataset_metadata$primarykey, with=FALSE ] )
   mlflow_exp_det <- paste0( "/test-", datahash )
 }
@@ -809,28 +808,28 @@ ctrl <- setMBOControlInfill(ctrl, crit = makeMBOInfillCritEI())
 ctrl <- setMBOControlInfill(ctrl, filter.proposed.points = TRUE)
 
 ctrl <- setMBOControlMultiObj(
-    ctrl,
-    method = "parego",
-    parego.s = 100000L,
-    parego.rho = 0.05,
-    parego.sample.more.weights = 1,
-    parego.normalize = front
+  ctrl,
+  method = "parego",
+  parego.s = 100000L,
+  parego.rho = 0.05,
+  parego.sample.more.weights = 1,
+  parego.normalize = front
 )
 
 # establezco la funcion que busca el maximo
 surr.km <- makeLearner("regr.km",
-  predict.type = "se",
-  covtype = "matern3_2",
-  control = list(trace = TRUE)
+                       predict.type = "se",
+                       covtype = "matern3_2",
+                       control = list(trace = TRUE)
 )
 
 surr.km <- makeLearner("regr.km",
-  predict.type = "se",
-  covtype = "matern3_2",
-  optim.method = "BFGS",
-  nugget.estim = TRUE,
-  jitter = TRUE,
-  control = list(trace = TRUE)
+                       predict.type = "se",
+                       covtype = "matern3_2",
+                       optim.method = "BFGS",
+                       nugget.estim = TRUE,
+                       jitter = TRUE,
+                       control = list(trace = TRUE)
 )
 
 
@@ -849,8 +848,8 @@ if (!file.exists("bayesiana.RDATA")) {
 if (file.exists("BO_log.txt")) {
   BO_log <- fread("BO_log.txt")
   envg$OUTPUT$ganancia_max <- BO_log[, max(ganancia, na.rm = TRUE)]
-
-
+  
+  
   envg$OUTPUT$time$end <- format(Sys.time(), "%Y%m%d %H%M%S")
   GrabarOutput()
 }
