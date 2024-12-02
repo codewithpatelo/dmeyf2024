@@ -377,7 +377,7 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
     max_bin = 31L, # lo debo dejar fijo, no participa de la BO
 
     nrounds = 9999L, # num_iterations = 9999L en lgm
-    early_stopping_base = 200L,
+    early_stopping_rounds = 200L,
 
     subsample = 1.0, # Equivalente a bagging_fraction
     scale_pos_weight = 1.0, # is_unbalance 

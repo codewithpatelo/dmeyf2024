@@ -42,8 +42,7 @@ fganancia_xgb_meseta <- function(probs, datos) {
   vlabels <- getinfo(datos, "label")
   vpesos <- getinfo(datos, "weight")
   
-  
-  
+
   GLOBAL_arbol <<- GLOBAL_arbol + 1
   tbl <- as.data.table(list(
     "prob" = probs, 
@@ -83,7 +82,6 @@ fganancia_xgb_meseta <- function(probs, datos) {
     )
   }
   
-  
   return(list(metric = "ganancia", value = gan))
   
 }
@@ -105,7 +103,6 @@ EstimarGanancia_xgboost <- function(x) {
         append = TRUE
     )
   }
-  
   
   # hago la union de los parametros basicos y los moviles que vienen en x
   param_completo <- c(envg$PARAM$xgb_basicos, x)
@@ -150,21 +147,37 @@ EstimarGanancia_xgboost <- function(x) {
   param_completo$early_stopping_rounds <-
     as.integer( param_completo$early_stopping_base + 4 / param_completo$eta)
   param_completo$early_stopping_base <- NULL
+
+  param_preparado <- list(
+    booster = param_completo$booster,
+    objective = param_completo$objective,
+    tree_method = param_completo$tree_method,
+    gamma = param_completo$gamma,
+    min_child_weight = param_completo$min_child_weight,
+    alpha = param_completo$alpha,
+    lambda = param_completo$lamda,
+    max_bin = param_completo$max_bin,
+    subsample = param_completo$subsample,
+    scale_pos_weight = param_completo$scale_pos_weight,
+    eta = param_completo$eta,
+    colsample_bytree= param_completo$colsample_bytree,
+  )
   
   GLOBAL_arbol <<- 0L
   GLOBAL_gan_max <<- -Inf
   vcant_optima <<- c()
   set.seed(envg$PARAM$xgb_semilla, kind = "L'Ecuyer-CMRG")
   
+  # Separar nrounds y early stopping del param_completo para mandar a modelo_train
   modelo_train <- xgb.train(
     data = dtrain,
     evals = list(train = dtrain, eval = dvalidate),
     feval = fganancia_xgb_meseta,
-    param = param_completo,
+    param = param_preparado,
     maximize = TRUE,
     nrounds = param_completo$nrounds,
     early_stopping_rounds = param_completo$early_stopping_rounds,
-    verbose = 2
+    verbose = 3
   )
   
   cat("\n")
@@ -196,16 +209,32 @@ EstimarGanancia_xgboost <- function(x) {
       if( "coverage_log" %in% param_ganador )  param_ganador$coverage_log <- NULL
       
       param_ganador$nrounds <- modelo_train$best_iteration
-      param_ganador$early_stopping <- 0
+      param_ganador$early_stopping_rounds <- 0
       sem <- envg$PARAM$semillas[  (iexp-1)*envg$PARAM$train$repeticiones_exp + isem ]
       param_ganador$seed <- sem
+
+      param_preparado <- list(
+        booster = param_ganador$booster,
+        objective = param_ganador$objective,
+        tree_method = param_ganador$tree_method,
+        gamma = param_ganador$gamma,
+        min_child_weight = param_ganador$min_child_weight,
+        alpha = param_ganador$alpha,
+        lambda = param_ganador$lamda,
+        max_bin = param_ganador$max_bin,
+        subsample = param_ganador$subsample,
+        scale_pos_weight = param_ganador$scale_pos_weight,
+        eta = param_ganador$eta,
+        colsample_bytree= param_ganador$colsample_bytree,
+      )
       
       set.seed(envg$PARAM$seed, kind = "L'Ecuyer-CMRG")
       modelo_local <- xgb.train(
         data = dtrain,
-        param = param_ganador,
+        param = param_preparado,
         nrounds = param_ganador$nrounds,
-        verbose = 2
+        early_stopping_rounds = param_ganador$early_stopping_rounds
+        verbose = 3
       )
       
       t1_local <- proc.time()
@@ -423,6 +452,21 @@ EstimarGanancia_xgboostCV <- function(x) {
   param_completo$early_stopping_rounds <-
     as.integer(400 + 4 / param_completo$eta)
   
+  param_preparado <- list(
+    booster = param_completo$booster,
+    objective = param_completo$objective,
+    tree_method = param_completo$tree_method,
+    gamma = param_completo$gamma,
+    min_child_weight = param_completo$min_child_weight,
+    alpha = param_completo$alpha,
+    lambda = param_completo$lamda,
+    max_bin = param_completo$max_bin,
+    subsample = param_completo$subsample,
+    scale_pos_weight = param_completo$scale_pos_weight,
+    eta = param_completo$eta,
+    colsample_bytree= param_completo$colsample_bytree,
+  )
+  
   vcant_optima <<- c()
   GLOBAL_arbol <<- 0L
   GLOBAL_gan_max <<- -Inf
@@ -430,14 +474,13 @@ EstimarGanancia_xgboostCV <- function(x) {
   modelocv_log <- list()
   modelocv <- xgb.cv(
     data = dtrain,
-    label = getinfo(dtrain, "label"),
     evals = list(train = dtrain, eval = dvalidate),
     feval = fganancia_xgb_mesetaCV,
-    param = param_completo,
+    param = param_preparado,
     stratified = TRUE, # sobre el cross validation
     nfold = envg$PARAM$xgb_crossvalidation_folds,
     early_stopping_rounds = param_completo$early_stopping_rounds, 
-    verbose = 1,
+    verbose = 3,
     maximize = TRUE,
     callbacks = list(
       cb.evaluation.log(modelocv_log) # Callback para registrar métricas
@@ -461,12 +504,28 @@ EstimarGanancia_xgboostCV <- function(x) {
     # debo recrear el modelo
     param_completo$early_stopping_rounds <- NULL
     param_completo$nrounds <- modelocv$best_iteration
+
+    param_preparado <- list(
+      booster = param_completo$booster,
+      objective = param_completo$objective,
+      tree_method = param_completo$tree_method,
+      gamma = param_completo$gamma,
+      min_child_weight = param_completo$min_child_weight,
+      alpha = param_completo$alpha,
+      lambda = param_completo$lamda,
+      max_bin = param_completo$max_bin,
+      subsample = param_completo$subsample,
+      scale_pos_weight = param_completo$scale_pos_weight,
+      eta = param_completo$eta,
+      colsample_bytree= param_completo$colsample_bytree,
+    )
     
     modelo <- xgb.train(
       data = dtrain,
-      param = param_completo,
+      param = param_preparado,
       nrounds = param_completo$nrounds,
-      verbose = 0
+      early_stopping_rounds = param_completo$early_stopping_rounds, 
+      verbose = 3
     )
     
     # aplico el modelo a testing y calculo la ganancia
@@ -508,12 +567,28 @@ EstimarGanancia_xgboostCV <- function(x) {
     param_impo <- copy(param_completo)
     param_impo$early_stopping_rounds <- 0
     param_impo$nrounds <- modelocv$best_iteration
+
+    param_preparado <- list(
+      booster = param_completo$booster,
+      objective = param_completo$objective,
+      tree_method = param_completo$tree_method,
+      gamma = param_completo$gamma,
+      min_child_weight = param_completo$min_child_weight,
+      alpha = param_completo$alpha,
+      lambda = param_completo$lamda,
+      max_bin = param_completo$max_bin,
+      subsample = param_completo$subsample,
+      scale_pos_weight = param_completo$scale_pos_weight,
+      eta = param_completo$eta,
+      colsample_bytree= param_completo$colsample_bytree,
+    )
     
     modelo <- xgb.train(
       data = dtrain,
-      param = param_impo,
+      param = param_preparado,
       nrounds = param_impo$nrounds,
-      verbose = 2
+      early_stopping_rounds = param_impo$early_stopping_rounds, 
+      verbose = 3
     )
     
     tb_importancia <- as.data.table(xgb.importance(modelo))
@@ -558,6 +633,9 @@ parametrizar  <- function( lparam )
 {
   param_fijos  <- copy( lparam )
   hs  <- list()
+  cat("Inicio de parametrizar\n")
+  cat("Parámetros iniciales:\n")
+  print(param_fijos)
   
   for( param  in  names( lparam ) )
   {
@@ -568,9 +646,11 @@ parametrizar  <- function( lparam )
       
       if( length( lparam[[ param ]] ) == 2 )
       {
+        cat(sprintf("Agregado makeNumericParam: %s, rango: [%f, %f]\n", param, desde, hasta))
         hs  <- append( hs,  
                        list( makeNumericParam( param, lower= desde, upper= hasta)  ) )
       } else {
+        cat(sprintf("Agregado makeIntegerParam: %s, rango: [%f, %f]\n", param, desde, hasta))
         hs  <- append( hs, 
                        list( makeIntegerParam( param, lower= desde, upper= hasta) ) )
       }
@@ -578,6 +658,11 @@ parametrizar  <- function( lparam )
       param_fijos[[ param ]] <- NULL  #lo quito 
     }
   }
+
+  cat("Parámetros fijos finales:\n")
+  print(param_fijos)
+  cat("Conjunto de hiperparámetros:\n")
+  print(hs)
   
   return( list( "param_fijos" =  param_fijos,
                 "paramSet"    =  hs ) )
