@@ -368,25 +368,26 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
     objective = "binary:logistic", # Como objective = "binary" en lgm
     tree_method = "hist",
     #first_metric_only = TRUE, Habría que ver si hay que modificar la función de gan para que se comporte igual
-    verbosity = 0,
+    verbose = 3,
     max_depth = 6L,
     gamma = 0.0, # Corresponde a min_gain_to_split = 0.0
-    min_child_weight = 0.001, # Para ser equivalente a min_sum_hessian_in_leaf = 0.001
+    min_child_weight = c(0.001, 10), # Para ser equivalente a min_sum_hessian_in_leaf = 0.001
     alpha = 0.0, # Equivalente a lambda_l1
     lambda = 0.0, # Equivalente a lambda_l2
     max_bin = 31L, # lo debo dejar fijo, no participa de la BO
 
     nrounds = 9999L, # num_iterations = 9999L en lgm
-    early_stopping_rounds = 200L,
+    early_stopping_base = 200L,
 
     subsample = 1.0, # Equivalente a bagging_fraction
     scale_pos_weight = 1.0, # is_unbalance 
 
     eta = c( 0.3, 0.8 ), # learning_rate en lgm
     colsample_bytree = c( 0.05, 0.95 ), # feature_fraction en lgm
-
-    leaf_size_log = c( -10, -5),   # deriva en min_data_in_leaf
-    coverage_log = c( -8, 0 )      # deriva en num_leaves
+    tweedie_variance_power = c(1.75, 1.85)
+    max_delta_step = c(0, 5)
+    #leaf_size_log = c( -10, -5),   # deriva en min_data_in_leaf
+    #coverage_log = c( -8, 0 )      # deriva en num_leaves
   )
 
 
