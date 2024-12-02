@@ -141,11 +141,28 @@ for (modelo_rank in envg$PARAM$modelos_rank) {
     if (!file.exists(arch_modelo)) {
       cat("\nentrenando modelo = ", sem, "  .")
       set.seed(parametros$seed, kind = "L'Ecuyer-CMRG")
+      param_preparado <- list(
+        booster = parametros$booster,
+        objective = parametros$objective,
+        tree_method = parametros$tree_method,
+        max_depth = parametros$max_depth
+        gamma = parametros$gamma,
+        alpha = parametros$alpha,
+        lambda = parametros$lamda,
+        min_child_weight = parametros$min_child_weight,
+        tweedie_variance_power = parametros$tweedie_variance_power,
+        max_delta_step = parametros$max_delta_step,
+        max_bin = parametros$max_bin,
+        subsample = parametros$subsample,
+        scale_pos_weight = parametros$scale_pos_weight,
+        eta = parametros$eta,
+        colsample_bytree= parametros$colsample_bytree,
+     )
       modelo_final <- xgb.train(
-        params = parametros,
+        params = param_preparado,
         data = dtrain,
-        nrounds = parametros$num_iterations,
-        verbose = 0
+        nrounds = parametros$nrounds,
+        verbose = parametros$verbose
       )
       cat(" ...Fin.")
 

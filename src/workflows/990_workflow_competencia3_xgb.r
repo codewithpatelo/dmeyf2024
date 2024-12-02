@@ -384,7 +384,7 @@ HT_tuning_semillerio <- function( pinputexps, semillerio, bo_iteraciones, bypass
 
     eta = c( 0.3, 0.8 ), # learning_rate en lgm
     colsample_bytree = c( 0.05, 0.95 ), # feature_fraction en lgm
-    tweedie_variance_power = c(1.75, 1.85)
+    tweedie_variance_power = c(1.75, 1.85),
     max_delta_step = c(0, 5)
     #leaf_size_log = c( -10, -5),   # deriva en min_data_in_leaf
     #coverage_log = c( -8, 0 )      # deriva en num_leaves
