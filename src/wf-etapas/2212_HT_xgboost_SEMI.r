@@ -42,7 +42,7 @@ fganancia_xgb_meseta <- function(probs, datos) {
   vlabels <- getinfo(datos, "label")
   vpesos <- getinfo(datos, "weight")
   
-
+  
   GLOBAL_arbol <<- GLOBAL_arbol + 1
   tbl <- as.data.table(list(
     "prob" = probs, 
@@ -106,10 +106,10 @@ EstimarGanancia_xgboost <- function(x) {
   
   # hago la union de los parametros basicos y los moviles que vienen en x
   param_completo <- c(envg$PARAM$xgb_basicos, x)
-
+  
   cat("Contenido de x:\n")
   print(head(x))
-
+  
   cat("\nContenido de param_completo:\n")
   print(head(param_completo))
   
@@ -127,18 +127,18 @@ EstimarGanancia_xgboost <- function(x) {
     param_completo$min_child_weight <- pmax( 1L, as.integer( round(2.0 ^ param_completo$min_child_weight_log)))# Similar a min data in leaf de LGM
   
   # Transformación de leaf_size_log y coverage para XGBoost
- # if ("leaf_size_log" %in% names(param_completo) & 
- #     "coverage_log" %in% names(param_completo)) {
-    
-    # Tamaño mínimo de las hojas (min_child_weight en XGBoost)
+  # if ("leaf_size_log" %in% names(param_completo) & 
+  #     "coverage_log" %in% names(param_completo)) {
+  
+  # Tamaño mínimo de las hojas (min_child_weight en XGBoost)
   #  param_completo$min_child_weight <- pmax(1, round(nrow(dtrain) * (2.0 ^ param_completo$leaf_size_log)))
-    
-    # Número máximo de hojas (max_leaves en XGBoost, cuando grow_policy = "lossguide")
-   # param_completo$max_leaves <- pmin(
-   #   131072, 
-   #   pmax(8, round(((2.0 ^ param_completo$coverage_log)) * nrow(dtrain) / param_completo$min_child_weight))
- #   )
- # }
+  
+  # Número máximo de hojas (max_leaves en XGBoost, cuando grow_policy = "lossguide")
+  # param_completo$max_leaves <- pmin(
+  #   131072, 
+  #   pmax(8, round(((2.0 ^ param_completo$coverage_log)) * nrow(dtrain) / param_completo$min_child_weight))
+  #   )
+  # }
   
   if ("min_child_weight_log" %in% names(param_completo) & 
       !("coverage_log" %in% names(param_completo))) {
@@ -148,28 +148,27 @@ EstimarGanancia_xgboost <- function(x) {
   }
   
   # Otros parámetros de XGBoost relacionados con el tamaño de hojas y estructura
- # param_completo$grow_policy <- "lossguide" # Basado en hojas, en lugar de profundidad
+  # param_completo$grow_policy <- "lossguide" # Basado en hojas, en lugar de profundidad
   
   param_completo$early_stopping_rounds <-
     as.integer( param_completo$early_stopping_base + 4 / param_completo$eta)
   param_completo$early_stopping_base <- NULL
-
+  
   param_preparado <- list(
     booster = param_completo$booster,
     objective = param_completo$objective,
     tree_method = param_completo$tree_method,
-    max_depth = param_completo$max_depth
+    max_depth = param_completo$max_depth,
     gamma = param_completo$gamma,
     alpha = param_completo$alpha,
-    lambda = param_completo$lamda,
+    reg_lambda = param_completo$lambda,
     min_child_weight = param_completo$min_child_weight,
-    tweedie_variance_power = param_completo$tweedie_variance_power,
     max_delta_step = param_completo$max_delta_step,
     max_bin = param_completo$max_bin,
     subsample = param_completo$subsample,
     scale_pos_weight = param_completo$scale_pos_weight,
     eta = param_completo$eta,
-    colsample_bytree= param_completo$colsample_bytree,
+    colsample_bytree = param_completo$colsample_bytree
   )
   
   GLOBAL_arbol <<- 0L
@@ -221,23 +220,22 @@ EstimarGanancia_xgboost <- function(x) {
       param_ganador$early_stopping_rounds <- 0
       sem <- envg$PARAM$semillas[  (iexp-1)*envg$PARAM$train$repeticiones_exp + isem ]
       param_ganador$seed <- sem
-
+      
       param_preparado <- list(
         booster = param_completo$booster,
         objective = param_completo$objective,
         tree_method = param_completo$tree_method,
-        max_depth = param_completo$max_depth
+        max_depth = param_completo$max_depth,
         gamma = param_completo$gamma,
         alpha = param_completo$alpha,
-        lambda = param_completo$lamda,
+        reg_lambda = param_completo$lambda,
         min_child_weight = param_completo$min_child_weight,
-        tweedie_variance_power = param_completo$tweedie_variance_power,
         max_delta_step = param_completo$max_delta_step,
         max_bin = param_completo$max_bin,
         subsample = param_completo$subsample,
         scale_pos_weight = param_completo$scale_pos_weight,
         eta = param_completo$eta,
-        colsample_bytree= param_completo$colsample_bytree,
+        colsample_bytree = param_completo$colsample_bytree
       )
       
       set.seed(envg$PARAM$seed, kind = "L'Ecuyer-CMRG")
@@ -245,7 +243,8 @@ EstimarGanancia_xgboost <- function(x) {
         data = dtrain,
         param = param_preparado,
         nrounds = param_ganador$nrounds,
-        early_stopping_rounds = param_ganador$early_stopping_rounds
+        evals = list(train = dtrain, eval = dvalidate),
+        early_stopping_rounds = param_ganador$early_stopping_rounds,
         verbose = param_ganador$verbose
       )
       
@@ -460,32 +459,31 @@ EstimarGanancia_xgboostCV <- function(x) {
   }
   
   param_completo <- c(envg$PARAM$xgb_basicos, x)
-
-   cat("Contenido de x:\n")
-   print(head(x))
-
-   cat("\nContenido de param_completo:\n")
-   print(head(param_completo))
+  
+  cat("Contenido de x:\n")
+  print(head(x))
+  
+  cat("\nContenido de param_completo:\n")
+  print(head(param_completo))
   
   param_completo$early_stopping_rounds <-
     as.integer(400 + 4 / param_completo$eta)
   
   param_preparado <- list(
-        booster = param_completo$booster,
-        objective = param_completo$objective,
-        tree_method = param_completo$tree_method,
-        max_depth = param_completo$max_depth
-        gamma = param_completo$gamma,
-        alpha = param_completo$alpha,
-        lambda = param_completo$lamda,
-        min_child_weight = param_completo$min_child_weight,
-        tweedie_variance_power = param_completo$tweedie_variance_power,
-        max_delta_step = param_completo$max_delta_step,
-        max_bin = param_completo$max_bin,
-        subsample = param_completo$subsample,
-        scale_pos_weight = param_completo$scale_pos_weight,
-        eta = param_completo$eta,
-        colsample_bytree= param_completo$colsample_bytree,
+    booster = param_completo$booster,
+    objective = param_completo$objective,
+    tree_method = param_completo$tree_method,
+    max_depth = param_completo$max_depth,
+    gamma = param_completo$gamma,
+    alpha = param_completo$alpha,
+    reg_lambda = param_completo$lambda,
+    min_child_weight = param_completo$min_child_weight,
+    max_delta_step = param_completo$max_delta_step,
+    max_bin = param_completo$max_bin,
+    subsample = param_completo$subsample,
+    scale_pos_weight = param_completo$scale_pos_weight,
+    eta = param_completo$eta,
+    colsample_bytree = param_completo$colsample_bytree
   )
   
   vcant_optima <<- c()
@@ -525,30 +523,28 @@ EstimarGanancia_xgboostCV <- function(x) {
     # debo recrear el modelo
     param_completo$early_stopping_rounds <- NULL
     param_completo$nrounds <- modelocv$best_ntreelimit
-
+    
     param_preparado <- list(
-        booster = param_completo$booster,
-        objective = param_completo$objective,
-        tree_method = param_completo$tree_method,
-        max_depth = param_completo$max_depth
-        gamma = param_completo$gamma,
-        alpha = param_completo$alpha,
-        lambda = param_completo$lamda,
-        min_child_weight = param_completo$min_child_weight,
-        tweedie_variance_power = param_completo$tweedie_variance_power,
-        max_delta_step = param_completo$max_delta_step,
-        max_bin = param_completo$max_bin,
-        subsample = param_completo$subsample,
-        scale_pos_weight = param_completo$scale_pos_weight,
-        eta = param_completo$eta,
-        colsample_bytree= param_completo$colsample_bytree,
-  )
+      booster = param_completo$booster,
+      objective = param_completo$objective,
+      tree_method = param_completo$tree_method,
+      max_depth = param_completo$max_depth,
+      gamma = param_completo$gamma,
+      alpha = param_completo$alpha,
+      reg_lambda = param_completo$lambda,
+      min_child_weight = param_completo$min_child_weight,
+      max_delta_step = param_completo$max_delta_step,
+      max_bin = param_completo$max_bin,
+      subsample = param_completo$subsample,
+      scale_pos_weight = param_completo$scale_pos_weight,
+      eta = param_completo$eta,
+      colsample_bytree = param_completo$colsample_bytree
+    )
     
     modelo <- xgb.train(
       data = dtrain,
       param = param_preparado,
       nrounds = param_completo$nrounds,
-      early_stopping_rounds = param_completo$early_stopping_rounds, 
       verbose = param_completo$verbose
     )
     
@@ -591,29 +587,29 @@ EstimarGanancia_xgboostCV <- function(x) {
     param_impo <- copy(param_completo)
     param_impo$early_stopping_rounds <- 0
     param_impo$nrounds <- modelocv$best_ntreelimit
-
+    
     param_preparado <- list(
-        booster = param_completo$booster,
-        objective = param_completo$objective,
-        tree_method = param_completo$tree_method,
-        max_depth = param_completo$max_depth
-        gamma = param_completo$gamma,
-        alpha = param_completo$alpha,
-        lambda = param_completo$lamda,
-        min_child_weight = param_completo$min_child_weight,
-        tweedie_variance_power = param_completo$tweedie_variance_power,
-        max_delta_step = param_completo$max_delta_step,
-        max_bin = param_completo$max_bin,
-        subsample = param_completo$subsample,
-        scale_pos_weight = param_completo$scale_pos_weight,
-        eta = param_completo$eta,
-        colsample_bytree= param_completo$colsample_bytree,
-  )
+      booster = param_completo$booster,
+      objective = param_completo$objective,
+      tree_method = param_completo$tree_method,
+      max_depth = param_completo$max_depth,
+      gamma = param_completo$gamma,
+      alpha = param_completo$alpha,
+      lambda = param_completo$lambda,
+      min_child_weight = param_completo$min_child_weight,
+      max_delta_step = param_completo$max_delta_step,
+      max_bin = param_completo$max_bin,
+      subsample = param_completo$subsample,
+      scale_pos_weight = param_completo$scale_pos_weight,
+      eta = param_completo$eta,
+      colsample_bytree = param_completo$colsample_bytree
+    )
     
     modelo <- xgb.train(
       data = dtrain,
       param = param_preparado,
       nrounds = param_impo$nrounds,
+      evals = list(train = dtrain, eval = dvalidate),
       early_stopping_rounds = param_impo$early_stopping_rounds, 
       verbose = param_completo$verbose
     )
@@ -685,7 +681,7 @@ parametrizar  <- function( lparam )
       param_fijos[[ param ]] <- NULL  #lo quito 
     }
   }
-
+  
   cat("Parámetros fijos finales:\n")
   print(param_fijos)
   cat("Conjunto de hiperparámetros:\n")
