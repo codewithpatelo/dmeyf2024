@@ -659,7 +659,7 @@ EstimarGanancia_xgboostCV <- function(x) {
   
   
   # logueo final
-  ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
+  ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_name")), 
              "rows" = nrow(xgboost::getinfo(dtrain, "label")))
   xx <- c(ds, copy(param_completo))
   
