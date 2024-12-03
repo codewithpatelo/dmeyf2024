@@ -62,13 +62,6 @@ fganancia_xgb_meseta <- function(probs, datos) {
   
   gan <- tbl[, max(gan_suavizada, na.rm = TRUE)]
   
-  # Reemplazar NA con 0
-  #tbl[, gan_suavizada := ifelse(is.na(gan_suavizada), 0, gan_suavizada)]
-  
-  # O eliminar filas con NA en 'gan_suavizada'
-  #tbl <- tbl[!is.na(gan_suavizada)]
-  #if (is.infinite(gan)) gan <- 0
-  
   pos <- which.max(tbl[, gan_suavizada])
   vcant_optima <<- c(vcant_optima, pos)
   
@@ -110,8 +103,7 @@ EstimarGanancia_xgboost <- function(x) {
   cat("Contenido de x:\n")
   print(head(x))
   
-  cat("\nContenido de param_completo:\n")
-  print(head(param_completo))
+
   
   if( "eta_log" %in% names(param_completo) )
     param_completo$eta <- 2.0 ^ param_completo$eta_log # Equivale a Learning Rate de LGM
@@ -153,6 +145,9 @@ EstimarGanancia_xgboost <- function(x) {
   param_completo$early_stopping_rounds <-
     as.integer( param_completo$early_stopping_base + 4 / param_completo$eta)
   param_completo$early_stopping_base <- NULL
+
+  cat("\nContenido de param_completo:\n")
+  print(param_completo)
   
   param_preparado <- list(
     booster = param_completo$booster,
@@ -191,6 +186,8 @@ EstimarGanancia_xgboost <- function(x) {
   cat("\n")
   
   cant_corte <- vcant_optima[modelo_train$best_iteration]
+
+  cat("cant_corte:", cant_corte, "\n")
   
   tiempo_normals <- c()
   gan_normals <- c()
@@ -220,6 +217,9 @@ EstimarGanancia_xgboost <- function(x) {
       param_ganador$early_stopping_rounds <- 0
       sem <- envg$PARAM$semillas[  (iexp-1)*envg$PARAM$train$repeticiones_exp + isem ]
       param_ganador$seed <- sem
+
+      cat("\nContenido de param_ganador:\n")
+      print(param_ganador)
       
       param_preparado <- list(
         booster = param_completo$booster,
@@ -463,11 +463,12 @@ EstimarGanancia_xgboostCV <- function(x) {
   cat("Contenido de x:\n")
   print(head(x))
   
-  cat("\nContenido de param_completo:\n")
-  print(head(param_completo))
   
   param_completo$early_stopping_rounds <-
     as.integer(400 + 4 / param_completo$eta)
+
+  cat("\nContenido de param_completo:\n")
+  print(param_completo)
   
   param_preparado <- list(
     booster = param_completo$booster,
@@ -510,12 +511,17 @@ EstimarGanancia_xgboostCV <- function(x) {
   
   desde <- (modelocv$best_iteration - 1) * envg$PARAM$xgb_crossvalidation_folds + 1
   hasta <- desde + envg$PARAM$xgb_crossvalidation_folds - 1
+
+  cat("desde:", desde, "\n")
+  cat("hasta:", hasta, "\n")
   
   cant_corte <- as.integer(mean(vcant_optima[desde:hasta]) *
                              envg$PARAM$xgb_crossvalidation_folds)
   
   
   ganancia <- unlist(modelocv_log$valid$ganancia)[modelocv$best_iteration]
+  cat("Ganancia: \n")
+  print(ganancia)
   ganancia_normalizada <- ganancia * envg$PARAM$xgb_crossvalidation_folds
   
   
@@ -523,6 +529,9 @@ EstimarGanancia_xgboostCV <- function(x) {
     # debo recrear el modelo
     param_completo$early_stopping_rounds <- NULL
     param_completo$nrounds <- modelocv$best_iteration
+
+    cat("\nContenido de param_completo:\n")
+    print(param_completo)
     
     param_preparado <- list(
       booster = param_completo$booster,
@@ -553,6 +562,8 @@ EstimarGanancia_xgboostCV <- function(x) {
       modelo,
       data.matrix(dataset_test[, campos_buenos, with = FALSE])
     )
+
+    print(prediccion)
     
     tbl <- copy(dataset_test[
       ,
@@ -587,6 +598,11 @@ EstimarGanancia_xgboostCV <- function(x) {
     param_impo <- copy(param_completo)
     param_impo$early_stopping_rounds <- 0
     param_impo$nrounds <- modelocv$best_iteration
+
+    cat("\nContenido de param_impo:\n")
+    print(param_impo)
+
+    
     
     param_preparado <- list(
       booster = param_completo$booster,
