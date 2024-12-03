@@ -313,8 +313,13 @@ EstimarGanancia_xgboost <- function(x) {
       gc(verbose= FALSE)
       
       # logueo final
-      ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
-                 "rows" = nrow(xgboost::getinfo(dtrain, "label")))
+      ds <- list("cols" = ncol(dtrain), 
+                 "rows" = xgboost::getinfo(dtrain, "nrow"))
+      
+      cat( "DS: \n")
+      
+      print(ds)
+      
       
       xx <- c(ds, copy(param_completo))
       
@@ -353,8 +358,13 @@ EstimarGanancia_xgboost <- function(x) {
   ganancia_test_normalizada <- mean(gan_normals)
   cantidad_test_normalizada <- round(mean(cant_normals))
   
-  ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_names")), 
-             "rows" = nrow(xgboost::getinfo(dtrain, "label")))
+  ds <- list("cols" = ncol(dtrain), 
+                 "rows" = xgboost::getinfo(dtrain, "nrow"))
+  
+  cat( "DS: \n")
+  
+  print(ds)
+  
   xx <- c(ds, copy(param_completo))
   
   xx$early_stopping_rounds <- NULL
@@ -659,8 +669,8 @@ EstimarGanancia_xgboostCV <- function(x) {
   
   
   # logueo final
-  ds <- list("cols" = ncol(xgboost::getinfo(dtrain, "feature_name")), 
-             "rows" = xgboost::getinfo(dtrain, "nrow"))
+  ds <- list("cols" = ncol(dtrain), 
+                 "rows" = xgboost::getinfo(dtrain, "nrow"))
   
   cat( "DS: \n")
   
