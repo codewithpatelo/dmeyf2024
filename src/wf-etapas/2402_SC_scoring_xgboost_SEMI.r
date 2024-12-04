@@ -85,7 +85,7 @@ for ( ipred in seq(qpred) ) {
   envg$OUTPUT$status$repeticion <- mod$repeticion
   envg$OUTPUT$status$modelo_isem <- mod$isem
 
-  modelo_final <- xgb.load(filename =  paste0( "./", envg$PARAM$input[1], "/", mod$archivo))
+  modelo_final <- xgb.load(paste0( "./", envg$PARAM$input[1], "/", mod$archivo))
 
   # genero la prediccion, Scoring
   cat( "creo predict\n")

@@ -195,6 +195,7 @@ for (modelo_rank in envg$PARAM$modelos_rank) {
       {
         cat( "\nentrenando modelo = ", sem, "  ." )
         set.seed(parametros$seed, kind = "L'Ecuyer-CMRG")
+        print(parametros)
         param_preparado <- list(
           booster = parametros$booster,
           objective = parametros$objective,
@@ -223,7 +224,7 @@ for (modelo_rank in envg$PARAM$modelos_rank) {
         
         # grabo el modelo, achivo .model
         xgb.save(modelo_final,
-                 file = arch_modelo
+                 fname = arch_modelo
         )
         
         # creo y grabo la importancia de variables, solo para la primer semilla

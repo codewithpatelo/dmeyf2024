@@ -488,7 +488,7 @@ wf_competencia3_final_xgb <- function( pnombrewf )
     bo_iteraciones = 20  # iteraciones inteligentes, apenas 10
   )
 
-  fm <- FM_final_models_lightgbm_semillerio( 
+  fm <- FM_final_models_xgboost_semillerio( 
     c(ht, ts9), # los inputs
     ranks = c(1), # 1 = el mejor de la bayesian optimization
     semillerio = 50,   # cantidad de semillas finales
