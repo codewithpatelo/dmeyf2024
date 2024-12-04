@@ -15,6 +15,8 @@
 * Modelo 4: 990_workflow_competencia3_modelo4.r (VM 512 GB RAM 24 vCPU) | FeIntraCreacionismoPlus + FeHistL1y2T1y2 + FeRf25  
 * Modelo 5: 990_workflow_competencia3_xgb.r (VM 512 GB RAM 24 vCPU)     | FeIntraCreacionismo + FeHistL1y2T1y2 + FeRf25 + XGBoost 
 
+* Línea la Muerte (VM 32 GB 8 vCPU)
+
 ## Hibridaciones Experimentadas
 
 #### Ver código /src/hibridaciones/competencia3_hibrido.r
