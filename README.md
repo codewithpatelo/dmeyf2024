@@ -22,7 +22,7 @@
 * Híbrido 1: Modelo1 + Modelo2 + Modelo3 + Modelo4 + Modelo5
 * Híbrido 2: Modelo1 + Modelo2 + Modelo3 + Modelo4
 
-![alt text](image.png)
+![alt text](RPlot.png)
 
 
 ### Entrega seleccionada: 

@@ -52,17 +52,13 @@ kaggle_hibrido_2 <- data.frame("corte" = corte, "ganancia" = ganancia_hibrido_2,
 
 kaggle_modelos <- rbind(kaggle_modelos, kaggle_hibrido_1, kaggle_hibrido_2)
 
-kaggle_modelos <- kaggle_modelos %>%
-  group_by(modelos) %>%
-  mutate(grosor = case_when(
-    ganancia == max(ganancia) ~ 2,  # Línea más gruesa para el modelo con mayor ganancia
-    ganancia == min(ganancia) ~ 0.5,  # Línea más delgada para el modelo con menor ganancia
-    TRUE ~ 1  # Otros modelos tienen grosor intermedio
-  ))
-
-# Usar 'scale_colour_gradient' para asignar colores de acuerdo con la ganancia
-ggplot(kaggle_modelos, aes(x = corte, y = ganancia, colour = ganancia, size = grosor)) +
-  geom_line() +
+ggplot(kaggle_modelos, aes(x = corte, y = ganancia, colour = ganancia, group = modelos)) +
+  geom_line() +  # Crear líneas
   scale_colour_gradient(low = "red", high = "green") +  # Rojo para menor ganancia, verde para mayor ganancia
+  geom_text(aes(label = modelos), hjust = -0.1, vjust = -0.5, size = 3, show.legend = FALSE) +  # Etiquetas para cada modelo
+  geom_hline(yintercept = 135.296, linetype = "dashed", color = "darkgrey") +  # Línea horizontal en y = 135.296
+  annotate("text", x = max(kaggle_modelos$corte) + 500, y = 135.296, label = "Línea de la Muerte", color = "darkgrey", size = 4) +  # Etiqueta para la línea
   theme_minimal() +
-  theme(legend.position = "none")  # Opcional: Eliminar leyenda de color
+  labs(title = "Comparación de Ganancias por Modelo", 
+       x = "Corte", 
+       y = "Ganancia")
