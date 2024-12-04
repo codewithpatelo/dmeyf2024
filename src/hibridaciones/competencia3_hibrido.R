@@ -143,16 +143,3 @@ kaggle_hibrido_2_12500 <- data.table(numero_de_cliente = modelos_promedio$numero
 write.csv(kaggle_hibrido_2_12500,
           "kaggle_hibrido_2_12500.csv", row.names = FALSE)
 
-#Subir los archivos a Kaggle manualmente
-
-# Poner las ganancias de Kaggle del modelo hibrido
-#ganancia_hibrido <- c(134.946, 133.897, 132.847, 134.596, 135.856, 132.427)
-#corte <- c(10000, 10500, 11000, 11500, 12000, 12500)
-#modelito <- rep("hibrido", 6)
-#kaggle_hibrido <- data.frame("corte" = corte, "ganancia" = ganancia_hibrido, "modelos" = modelito)
-
-#kaggle_modelos <- rbind(kaggle_modelos, kaggle_hibrido)
-
-# Grafica todos los modelos para comparar ganancias y elegir el mejor modelo y corte.
-#ggplot(kaggle_modelos, aes(x=corte, y=ganancia, colour = modelos))+
-#  geom_line()

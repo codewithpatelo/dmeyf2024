@@ -150,11 +150,16 @@ EstimarGanancia_AUC_xgboost <- function(x) {
     verbose = param_train$verbose
   )
   
-  AUC <- modelo_train$record_evals$valid$auc$eval[[[xgb.attributes(modelo_train)$best_iteration]]]
+  
+  AUC <- xgb.attributes(modelo_train)$best_score
+  
+  
+  
   
   
   # esta es la forma de devolver un parametro extra
-  attr(AUC, "extras") <- list("nrounds"= [xgb.attributes(modelo_train)$best_iteration])
+  attr(AUC, "extras") <- list("nrounds" = xgb.attributes(modelo_train)$best_iteration)
+  
   
   rm(modelo_train)
   gc(full= TRUE, verbose= FALSE)

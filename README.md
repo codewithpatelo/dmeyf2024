@@ -1,52 +1,30 @@
-# Competencia 02
+# Competencia 03
 
 ## Instrucciones
 
-(Semilla: 945799) -- Dataset con clase ternaria creado a partir de clase_ternaria2.py
-Correr código 990_workflow_competencia2_final.r (VM 256 GB RAM 24 vCPU)
+(Semilla: 945799) -- Dataset con clase ternaria creado a partir de clase_ternaria3.r
 
 
-# MODELO 2 - SEMI-CONSERVADOR C/ CANARITOS
-```r
-DT_incorporar_dataset()
-  #DC_eliminar_bajas1()
-  CA_catastrophe_base(metodo="MachineLearning")
-  FEintra_manual_creacionismo()  # Este código agrega unas pocas de las mejores variables creadas en las iteraciones del experimento creacionista
-  DR_drifting_base(metodo="rank_cero_fijo")
-  FEhist_base() # Lags/Deltas 1 y 2 | Tendencias1
-  ultimo <- FErf_attributes_base() # 25 arbolitos
-  CN_canaritos_asesinos_base(ratio=1, desvio=0)
+## Modelos Experimentados
 
-  ts8 <- TS_strategy_est8() # Todos meses por default de 990 pero sacando Marzo y Abril
+#### Todos los modelos sacan 202004, 202003 del TS del default del 990, tienen undersampling de 0.2, 20 iteraciones de BO, y 50 de semillerio, sin canaritos. Resto igual al 990.
 
-  ht <- HT_tuning_semillerio(
-    semillerio = 70, # semillerio dentro de la Bayesian Optim
-    bo_iteraciones = 40  
-  )
+* Modelo 1: 990_workflow_competencia3_modelo1.r (VM 512 GB RAM 24 vCPU) | FeIntraCreacionismo + FeHistL1y2T1 + FeRf25 
+* Modelo 2: 990_workflow_competencia3_modelo2.r (VM 512 GB RAM 24 vCPU) | FeIntraCreacionismo + FeHistL1y2T1y2 + FeRf25  
+* Modelo 3: 990_workflow_competencia3_modelo3.r (VM 512 GB RAM 24 vCPU) | FeIntraBase + FeHistL1y2T1y2 + FeRf25  
+* Modelo 4: 990_workflow_competencia3_modelo4.r (VM 512 GB RAM 24 vCPU) | FeIntraCreacionismoPlus + FeHistL1y2T1y2 + FeRf25  
+* Modelo 5: 990_workflow_competencia3_xgb.r (VM 512 GB RAM 24 vCPU)     | FeIntraCreacionismo + FeHistL1y2T1y2 + FeRf25 + XGBoost 
 
-  fm <- FM_final_models_lightgbm_semillerio( 
-    c(ht, ts8), # los inputs
-    ranks = c(1), # 1 = el mejor de la bayesian optimization
-    semillerio = 70,   # cantidad de semillas finales
-    repeticiones_exp = 1  # cantidad de repeticiones del semillerio
-  )
+## Hibridaciones Experimentadas
 
-  SC_scoring_semillerio( c(fm, ts8) )
-  KA_evaluate_kaggle_semillerio()
-```
+#### Ver código /src/hibridaciones/competencia3_hibrido.r
+
+* Híbrido 1: Modelo1 + Modelo2 + Modelo3 + Modelo4 + Modelo5
+* Híbrido 2: Modelo1 + Modelo2 + Modelo3 + Modelo4
+
+![alt text](image.png)
+
 
 ### Entrega seleccionada: 
-* KA-0002_01_051_r1_10500.csv  
+* 
   
-## Como entregas probé también:
-
-# MODELO 1 - Robatuti
-(Este es igual al modelo 2, pero sacaba bajas+1 y asignaba pesos estacionales según el mejor modelo del experimento estacional). No pareció dar buenos resultados pero voy a estar seguro luego de la competencia2. Por cuestiones de tiempo usaré la competencia 2 como experimento para saber que modelo es mejor. Y en base a eso decidiré cuál podré usar en la competencia3.
-
-## Cosas que quedaron en el tintero o a medio camino:
-
-(1) Agregar más variables creacionistas en la ingenieria de atributos manual intrames (preferencia por ordenes inferiores)
-(2) Modificar parametro de sub-muestreo
-(3) Probar xGBoost
-(4) Probar pesos obtenidos por BO
-(5) Agregar atributos artesanales de lógica booleana o de triple valor (como neutrosofica) para indicar imputaciones de valores 
