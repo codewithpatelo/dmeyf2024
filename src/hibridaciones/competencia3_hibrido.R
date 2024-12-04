@@ -2,7 +2,7 @@ library("data.table")
 library("ggplot2")
 library("dplyr")
 
-setwd("./")
+setwd("C:/Users/POO03/Documents/Patricio/datos_hibridaciones")
 
 
 
@@ -97,18 +97,6 @@ modelos_promedio$promedio <- rowMeans(modelos_promedio[, c("modelo_1",
 # Ordena las probabilidades según modelos_promedio
 setorder(modelos_promedio, -promedio)
 
-# Genera los archivos para subir a Kaggle con cortes (9500:12500)
-modelos_promedio$Predicted <- c(rep(1, 9500), rep(0, 165644-9500))
-kaggle_hibrido_2_9500 <- data.table(numero_de_cliente = modelos_promedio$numero_de_cliente,
-                                  Predicted = modelos_promedio$Predicted)
-write.csv(kaggle_hibrido_2_9500,
-          "kaggle_hibrido_2_9500.csv", row.names = FALSE)
-
-modelos_promedio$Predicted <- c(rep(1, 10000), rep(0, 165644-10000))
-kaggle_hibrido_2_10000 <- data.table(numero_de_cliente = modelos_promedio$numero_de_cliente,
-                                   Predicted = modelos_promedio$Predicted)
-write.csv(kaggle_hibrido_2_10000,
-          "kaggle_hibrido_2_10000.csv", row.names = FALSE)
 
 
 modelos_promedio$Predicted <- c(rep(1, 10500), rep(0, 165644-10500))
@@ -137,9 +125,5 @@ kaggle_hibrido_2_12000 <- data.table(numero_de_cliente = modelos_promedio$numero
 write.csv(kaggle_hibrido_2_12000,
           "kaggle_hibrido_2_12000.csv", row.names = FALSE)
 
-modelos_promedio$Predicted <- c(rep(1, 12500), rep(0, 165644-12500))
-kaggle_hibrido_2_12500 <- data.table(numero_de_cliente = modelos_promedio$numero_de_cliente,
-                                   Predicted = modelos_promedio$Predicted)
-write.csv(kaggle_hibrido_2_12500,
-          "kaggle_hibrido_2_12500.csv", row.names = FALSE)
+
 
