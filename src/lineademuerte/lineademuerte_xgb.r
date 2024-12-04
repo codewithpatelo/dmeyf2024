@@ -122,7 +122,7 @@ EstimarGanancia_AUC_xgboost <- function(x) {
   
   message(format(Sys.time(), "%a %b %d %X %Y"))
   
-  param_basicos <- list(
+  param_basicos <<- list(
     objective = "binary:logistic",
     eval_metric = "auc",
     tree_method = "hist",
@@ -212,7 +212,13 @@ surr.km <- makeLearner(
   control = list(trace = TRUE)
 )
 
-bayesiana_salida <- mbo(obj.fun, learner = surr.km, control = ctrl)
+
+
+if (!file.exists("lineademuerte.RDATA")) {
+  bayesiana_salida <<- mbo(obj.fun, learner = surr.km, control = ctrl)
+} else {
+  bayesiana_salida <<- mboContinue("lineademuerte.RDATA") # retomo en caso que ya exista
+}
 
 
 tb_bayesiana <- as.data.table(bayesiana_salida$opt.path)
@@ -222,7 +228,7 @@ mejores_hiperparametros <- tb_bayesiana[1, # el primero es el de mejor AUC
 
 print(mejores_hiperparametros)
 
-set_field(dtrain, "weight", rep(1.0, nrow(dtrain)))
+setinfo(dtrain, "weight", rep(1.0, nrow(dtrain)))
 
 param_final <- c(param_basicos, mejores_hiperparametros)
 
