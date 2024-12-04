@@ -3,8 +3,8 @@ format(Sys.time(), "%a %b %d %X %Y")
 rm(list = ls(all.names = TRUE)) # remove all objects
 gc(full = TRUE, verbose= FALSE) # garbage collection
 
-dir.create("~/buckets/b1/exp/lineademuerte/", showWarnings = FALSE)
-setwd( "~/buckets/b1/exp/lineademuerte/" )
+dir.create("~/buckets/b1/exp/lineademuertex/", showWarnings = FALSE)
+setwd( "~/buckets/b1/exp/lineademuertex/" )
 
 require( "data.table" )
 
@@ -90,7 +90,7 @@ dataset[, fold_train :=  foto_mes<= 202107 &
 
 dataset[, clase01 := ifelse( clase_ternaria=="CONTINUA", 0, 1 )]
 
-require("lightgbm")
+require("xgboost")
 
 # dejo los datos en el formato que necesita LightGBM
 dvalidate <- xgb.DMatrix(
@@ -121,7 +121,7 @@ nrow( dtrain )
 EstimarGanancia_AUC_xgboost <- function(x) {
   
   message(format(Sys.time(), "%a %b %d %X %Y"))
-
+  
   param_basicos <- list(
     objective = "binary:logistic",
     eval_metric = "auc",
@@ -130,14 +130,14 @@ EstimarGanancia_AUC_xgboost <- function(x) {
     eta = 0.03,
     colsample_bytree = 0.5
   )
-
+  
   param_train <- list(
     nrounds = 2048, # valor grande, lo limita early_stopping_rounds
     early_stopping_rounds = 200,
     verbose = 0
   )
-
-
+  
+  
   
   param_completo <- c(param_basicos, param_train, x)
   
@@ -149,9 +149,9 @@ EstimarGanancia_AUC_xgboost <- function(x) {
     early_stopping_rounds = param_train$early_stopping_rounds,
     verbose = param_train$verbose
   )
-
+  
   AUC <- modelo_train$record_evals$valid$auc$eval[[[xgb.attributes(modelo_train)$best_iteration]]]
-
+  
   
   # esta es la forma de devolver un parametro extra
   attr(AUC, "extras") <- list("nrounds"= [xgb.attributes(modelo_train)$best_iteration])
@@ -224,14 +224,14 @@ param_final <- c(param_basicos, mejores_hiperparametros)
 print(param_final)
 
 param_preparado <- list(
-    objective = param_final$objective,
-    eval_metric = param_final$eval_metric,
-    tree_method = param_final$tree_method,
-    max_bin = param_final$max_bin,
-    eta = param_final$eta,
-    colsample_bytree = param_final$colsample_bytree,
-    min_child_weight = param_final$min_child_weight,
-    max_depth = param_final$max_depth
+  objective = param_final$objective,
+  eval_metric = param_final$eval_metric,
+  tree_method = param_final$tree_method,
+  max_bin = param_final$max_bin,
+  eta = param_final$eta,
+  colsample_bytree = param_final$colsample_bytree,
+  min_child_weight = param_final$min_child_weight,
+  max_depth = param_final$max_depth
 )
 
 
