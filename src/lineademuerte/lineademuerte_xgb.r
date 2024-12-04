@@ -122,7 +122,7 @@ EstimarGanancia_AUC_xgboost <- function(x) {
   
   message(format(Sys.time(), "%a %b %d %X %Y"))
   
-  param_basicos <<- list(
+  param_basicos <- list(
     objective = "binary:logistic",
     eval_metric = "auc",
     tree_method = "hist",
@@ -229,6 +229,15 @@ mejores_hiperparametros <- tb_bayesiana[1, # el primero es el de mejor AUC
 print(mejores_hiperparametros)
 
 setinfo(dtrain, "weight", rep(1.0, nrow(dtrain)))
+
+param_basicos <- list(
+  objective = "binary:logistic",
+  eval_metric = "auc",
+  tree_method = "hist",
+  max_bin = 31,
+  eta = 0.03,
+  colsample_bytree = 0.5
+)
 
 param_final <- c(param_basicos, mejores_hiperparametros)
 
