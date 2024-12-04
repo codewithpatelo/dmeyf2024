@@ -14,6 +14,7 @@
 * Modelo 3: 990_workflow_competencia3_modelo3.r (VM 512 GB RAM 24 vCPU) | FeIntraBase + FeHistL1y2T1y2 + FeRf25  
 * Modelo 4: 990_workflow_competencia3_modelo4.r (VM 512 GB RAM 24 vCPU) | FeIntraCreacionismoPlus + FeHistL1y2T1y2 + FeRf25  
 * Modelo 5: 990_workflow_competencia3_xgb.r (VM 512 GB RAM 24 vCPU)     | FeIntraCreacionismo + FeHistL1y2T1y2 + FeRf25 + XGBoost 
+* Modelo 6: lineademuerte_xgb.r (VM 64 GB 8 vCPU)                       | Línea de la Muerte pero con XGBoost
 
 * Línea la Muerte (VM 32 GB 8 vCPU)
 
@@ -24,7 +25,7 @@
 * Híbrido 1: Modelo1 + Modelo2 + Modelo3 + Modelo4 + Modelo5
 * Híbrido 2: Modelo1 + Modelo2 + Modelo3 + Modelo4
 
-![alt text](RPlot.png)
+![alt text](image.png)
 
 
 ### Entrega seleccionada: 
