@@ -29,5 +29,5 @@
 
 
 ### Entrega seleccionada: 
-* 
+* MODELO 2 (Corte 1100) KA-0005_01_016_r1_11000.csv 
   
