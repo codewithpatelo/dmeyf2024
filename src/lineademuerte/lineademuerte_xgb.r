@@ -93,19 +93,18 @@ dataset[, clase01 := ifelse( clase_ternaria=="CONTINUA", 0, 1 )]
 require("lightgbm")
 
 # dejo los datos en el formato que necesita LightGBM
-dvalidate <- lgb.Dataset(
+dvalidate <- xgb.DMatrix(
   data = data.matrix(dataset[foto_mes==202107, campos_buenos, with = FALSE]),
-  label = dataset[foto_mes==202107, clase01],
-  free_raw_data = TRUE
+  label = dataset[foto_mes==202107, clase01]
 )
+
 
 # aqui se hace la magia informatica con los pesos para poder reutilizar
 #  el mismo dataset para training y final_train
-dtrain <- lgb.Dataset(
+dtrain <- xgb.DMatrix(
   data = data.matrix(dataset[fold_train == TRUE, campos_buenos, with = FALSE]),
   label = dataset[fold_train == TRUE, clase01],
-  weight = dataset[fold_train == TRUE, ifelse( foto_mes<=202106, 1.0, 0.0)],
-  free_raw_data = TRUE
+  weight = dataset[fold_train == TRUE, ifelse( foto_mes<=202106, 1.0, 0.0)]
 )
 
 rm( dataset )
@@ -117,44 +116,45 @@ nrow( dvalidate )
 nrow( dtrain )
 
 
-# parametros basicos del LightGBM
-param_basicos <- list(
-  objective = "binary",
-  metric = "auc",
-  first_metric_only = TRUE,
-  boost_from_average = TRUE,
-  feature_pre_filter = FALSE,
-  verbosity = -100,
-  force_row_wise = TRUE, # para evitar warning
-  seed = GLOBAL_semilla,
-  max_bin = 31,
-  learning_rate = 0.03,
-  feature_fraction = 0.5
-)
 
 
-EstimarGanancia_AUC_lightgbm <- function(x) {
+EstimarGanancia_AUC_xgboost <- function(x) {
   
   message(format(Sys.time(), "%a %b %d %X %Y"))
-  param_train <- list(
-    num_iterations = 2048, # valor grande, lo limita early_stopping_rounds
-    early_stopping_rounds = 200
+
+  param_basicos <- list(
+    objective = "binary:logistic",
+    eval_metric = "auc",
+    tree_method = "hist",
+    max_bin = 31,
+    eta = 0.03,
+    colsample_bytree = 0.5
   )
+
+  param_train <- list(
+    nrounds = 2048, # valor grande, lo limita early_stopping_rounds
+    early_stopping_rounds = 200,
+    verbose = 0
+  )
+
+
   
   param_completo <- c(param_basicos, param_train, x)
   
-  modelo_train <- lgb.train(
+  modelo_train <- xgb.train(
     data = dtrain,
-    valids = list(valid = dvalidate),
-    eval = "auc", 
-    param = param_completo,
-    verbose = -100
+    evals = list(train = dtrain, eval = dvalidate),
+    param = param_basicos,
+    nrounds = param_train$nrounds,
+    early_stopping_rounds = param_train$early_stopping_rounds,
+    verbose = param_train$verbose
   )
-  
-  AUC <- modelo_train$record_evals$valid$auc$eval[[modelo_train$best_iter]]
+
+  AUC <- modelo_train$record_evals$valid$auc$eval[[[xgb.attributes(modelo_train)$best_iteration]]]
+
   
   # esta es la forma de devolver un parametro extra
-  attr(AUC, "extras") <- list("num_iterations"= modelo_train$best_iter)
+  attr(AUC, "extras") <- list("nrounds"= [xgb.attributes(modelo_train)$best_iteration])
   
   rm(modelo_train)
   gc(full= TRUE, verbose= FALSE)
@@ -173,12 +173,12 @@ require("mlrMBO")<
 # configuro la busqueda bayesiana,  los hiperparametros que se van a optimizar
 # por favor, no desesperarse por lo complejo
 obj.fun <- makeSingleObjectiveFunction(
-  fn = EstimarGanancia_AUC_lightgbm, # la funcion que voy a maximizar
+  fn = EstimarGanancia_AUC_xgboost, # la funcion que voy a maximizar
   minimize = FALSE, # estoy Maximizando AUC
   noisy = FALSE,
   par.set = makeParamSet(
-    makeIntegerParam("num_leaves", lower = 8L, upper = 1024L),
-    makeIntegerParam("min_data_in_leaf", lower = 64L, upper = 8192L)
+    makeIntegerParam("max_depth", lower = 3L, upper = 15L), 
+    makeNumericParam("min_child_weight", lower = 1, upper = 10)
   ),
   has.simple.signature = FALSE # paso los parametros en una lista
 )
@@ -211,9 +211,9 @@ bayesiana_salida <- mbo(obj.fun, learner = surr.km, control = ctrl)
 
 
 tb_bayesiana <- as.data.table(bayesiana_salida$opt.path)
-setorder(tb_bayesiana, -y, -num_iterations) # ordeno en forma descendente por AUC = y
+setorder(tb_bayesiana, -y, -nrounds) # ordeno en forma descendente por AUC = y
 mejores_hiperparametros <- tb_bayesiana[1, # el primero es el de mejor AUC
-                                        list(num_leaves, min_data_in_leaf, num_iterations)]
+                                        list(max_depth, min_child_weight, nrounds)]
 
 print(mejores_hiperparametros)
 
@@ -221,11 +221,26 @@ set_field(dtrain, "weight", rep(1.0, nrow(dtrain)))
 
 param_final <- c(param_basicos, mejores_hiperparametros)
 
+print(param_final)
 
-final_model <- lgb.train(
+param_preparado <- list(
+    objective = param_final$objective,
+    eval_metric = param_final$eval_metric,
+    tree_method = param_final$tree_method,
+    max_bin = param_final$max_bin,
+    eta = param_final$eta,
+    colsample_bytree = param_final$colsample_bytree,
+    min_child_weight = param_final$min_child_weight,
+    max_depth = param_final$max_depth
+)
+
+
+
+final_model <- xgb.train(
   data = dtrain,
-  param = param_final,
-  verbose = -100
+  param = param_preparado,
+  nrounds = param_final$nrounds,
+  verbose = 0
 )
 
 
@@ -245,6 +260,6 @@ tb_entrega[, prob := NULL] # ya no necesito prob
 tb_entrega[, Predicted := 0L]
 tb_entrega[1:11000, Predicted := 1L]
 
-fwrite(tb_entrega, file = "lineademuerte_11000.csv" )
+fwrite(tb_entrega, file = "lineademuertex_11000.csv" )
 
 format(Sys.time(), "%a %b %d %X %Y")

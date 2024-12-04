@@ -235,6 +235,7 @@ EstimarGanancia_xgboost <- function(x) {
       param_preparado <- list(
         booster = param_completo$booster,
         objective = param_completo$objective,
+        eval_metric = "auc",
         tree_method = param_completo$tree_method,
         max_depth = param_completo$max_depth,
         gamma = param_completo$gamma,
@@ -558,6 +559,7 @@ EstimarGanancia_xgboostCV <- function(x) {
       booster = param_completo$booster,
       objective = param_completo$objective,
       tree_method = param_completo$tree_method,
+      eval_metric = "auc",
       max_depth = param_completo$max_depth,
       gamma = param_completo$gamma,
       alpha = param_completo$alpha,
@@ -629,6 +631,7 @@ EstimarGanancia_xgboostCV <- function(x) {
       booster = param_completo$booster,
       objective = param_completo$objective,
       tree_method = param_completo$tree_method,
+      eval_metric = "auc",
       max_depth = param_completo$max_depth,
       gamma = param_completo$gamma,
       alpha = param_completo$alpha,

@@ -201,6 +201,7 @@ for (modelo_rank in envg$PARAM$modelos_rank) {
           objective = parametros$objective,
           tree_method = parametros$tree_method,
           max_depth = parametros$max_depth,
+          eval_metric = "auc",
           gamma = parametros$gamma,
           alpha = parametros$alpha,
           reg_lambda = parametros$lambda,
