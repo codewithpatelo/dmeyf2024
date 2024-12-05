@@ -13,7 +13,7 @@ kaggle_modelo_2 <- read.table("modelo2_ganancias_log.txt", header = TRUE)[c(1:6)
 kaggle_modelo_3 <- read.table("modelo3_ganancias_log.txt", header = TRUE)[c(1:6),] # IntraNormal FeHist1y2 Rf25 NoCanaritos NoMarzoAbr 
 kaggle_modelo_4 <- read.table("modelo4_ganancias_log.txt", header = TRUE)[c(1:6),] # IntraCreacionismoPlus FeHist1y2 Rf25 NoCanaritos NoMarzoAbr 
 kaggle_modelo_5 <- read.table("modelo5_ganancias_log.txt", header = TRUE)[c(1:6),] # IntraCreacionista FeHist1y2 Rf25 NoCanartios NoMarzoAbr xGB
-kaggle_modelo_6 <- read.table("modelo6_ganancias_log.txt", header = TRUE)[c(1:6),] # Linea de la muerte
+#kaggle_modelo_6 <- read.table("modelo6_ganancias_log.txt", header = TRUE)[c(1:6),] # Linea de la muerte
 
 # Une todos los modelos
 kaggle_modelos <- rbind(kaggle_modelo_1, 
