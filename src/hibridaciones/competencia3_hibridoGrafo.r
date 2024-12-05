@@ -18,15 +18,15 @@ kaggle_modelo_5 <- read.table("modelo5_ganancias_log.txt", header = TRUE)[c(1:6)
 kaggle_modelos <- rbind(kaggle_modelo_1, 
                         kaggle_modelo_2, 
                         kaggle_modelo_3,
-                        kaggle_modelo_4 
-                        # kaggle_modelo_5
+                        kaggle_modelo_4,
+                        kaggle_modelo_5
 )
 
 kaggle_modelos$modelos <- c(rep("modelo_1",6), 
                             rep("modelo_2",6), 
                             rep("modelo_3",6),
-                            rep("modelo_4",6) 
-                            #rep("modelo_5",6)
+                            rep("modelo_4",6),
+                            rep("modelo_5",6)
 )
 
 # Me quedo con las variables que me importan: corte, ganancia y modelos
