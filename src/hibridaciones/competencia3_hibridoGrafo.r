@@ -96,6 +96,17 @@ na.rm = TRUE)
 # Ordena las probabilidades según modelos_promedio
 setorder(modelos_promedio, -promedio)
 
+corte <- c(9500, 10000, 10500, 11000, 11500, 12000, 12500)
+ganancia_hibrido_1 <- c(127.317, 126.337, 130.817, 132.567, 129.207, 134.177, 132.987)
+modelito_1 <- rep("hibrido_1", length(corte))
+kaggle_hibrido_1 <- data.frame("corte" = corte, "ganancia" = ganancia_hibrido_1, "modelos" = modelito_1)
+
+ganancia_hibrido_2 <- c(133.197, 134.317, 131.657,  127.037, 131.797, 133.757, 132.847)
+modelito_2 <- rep("hibrido_2", length(corte))
+kaggle_hibrido_2 <- data.frame("corte" = corte, "ganancia" = ganancia_hibrido_2, "modelos" = modelito_2)
+
+kaggle_modelos <- rbind(kaggle_modelos, kaggle_hibrido_1, kaggle_hibrido_2)
+
 # Filtra los datos para mostrar solo entre cortes 10500 y 12000
 kaggle_modelos_filtrado <- kaggle_modelos %>% 
   filter(corte >= 10500 & corte <= 12000)
